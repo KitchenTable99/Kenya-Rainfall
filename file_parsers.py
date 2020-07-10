@@ -13,6 +13,11 @@ def precipFileParser(file_path, months, sum_rainfall):
     Returns:
         3D list: the parsed contents. Of the form [[[x1, y1], may1, june1, july1, august1, september1], [[x2, y2], may2, june2, july2, august2, september2], ... ]
     '''
+    # input validation
+    if not isinstance(file_path, str): raise TypeError(f'file_path must be a string. You passed a {type(file_path)}.')
+    if not isinstance(months, list): raise TypeError(f'months must be a list. You passed a {type(months)}.')
+    if not isinstance(sum_rainfall, bool): raise TypeError(f'sum_rainfall must be a boolean. You passed a {type(sum_rainfall)}.')
+
     # bring in file
     with open(file_path, 'r') as fp:
         raw_file_contents = fp.read()
@@ -73,7 +78,7 @@ def floatify(lst):
 
 
 def test():
-    contents = precipFileParser('precip.1950', [2, 4, 5], 1)
+    contents = precipFileParser('precip.1950', [2], 4)
     print(contents[0])
     # print(contents)
 
