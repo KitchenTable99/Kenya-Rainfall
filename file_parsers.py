@@ -93,12 +93,16 @@ def cropCalendarParser(unit_name_start, crop_cal_name='./resources/cropping_cale
     '''This function parses the crop calendar to obtain the growing season of the predominant crop in a certain area.
     
     Args:
-        unit_name_start (int): the unit code for the desired country/area.
+        unit_name_start (int): the unit code for the desired country/area. See ./resources/unit_name.txt for list of unit codes.
         crop_cal_name (str, optional): the path to the crop calendar. Defaults to './resources/cropping_calendar_rainfed.txt'
     
     Returns:
         tuple: the beginning and end of the growing season as strings. e.g. ('4', '8')
     '''
+    # input validation
+    if not isinstance(unit_name_start, int): raise TypeError(f'unit_name_start must be a integer. You passed a {type(unit_name_start)}.')
+    if not isinstance(crop_cal_name, str): raise TypeError(f'crop_cal_name must be a string. You passed a {type(crop_cal_name)}.')
+
     # bring in calendar
     with open(crop_cal_name, 'r') as fp:
         calendar_contents = fp.read()
