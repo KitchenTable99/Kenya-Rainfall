@@ -1,6 +1,7 @@
 # This file will contain all of the methods to parse the various files required to calculate the average rainfall data as well as drought shocks
 # Caleb Bitting (Colby Class of 2023)
 # Written for research for Professor Daniel LaFave at Colby College
+import re
 
 def precipFileParser(file_path, months, sum_rainfall):
     '''This function parses a YYYY.precip file.
@@ -25,7 +26,7 @@ def precipFileParser(file_path, months, sum_rainfall):
     # split into rows and then split by spaces. drop all items that are the empty string
     file_contents = raw_file_contents.split('\n')
     file_contents = [row.split(' ') for row in file_contents]
-    drop_contents = [[num for num in row if num != ''] for row in file_contents]
+    drop_contents = [dropEmptyString(row) for row in file_contents]
     # drop any list at the very end that is the empty list
     while drop_contents[-1] == []:
         drop_contents.pop()
@@ -76,11 +77,47 @@ def floatify(lst):
 
     return lst
 
+def dropEmptyString(lst):
+    '''Drops every instance of the empty string in a list
+    
+    Args:
+        lst (list): pre-processed list with empty strings potentially present
+    
+    Returns:
+        list: the same input lst but with all empty strings dropped
+    '''
+    processed = [item for item in lst if item != '']
+    return processed
+
+def cropCalendarParser(unit_name_start, crop_cal_name='./resources/cropping_calendar_rainfed.txt'):
+    '''This function parses the crop calendar to obtain the growing season of the predominant crop in a certain area.
+    
+    Args:
+        unit_name_start (int): the unit code for the desired country/area.
+        crop_cal_name (str, optional): the path to the crop calendar. Defaults to './resources/cropping_calendar_rainfed.txt'
+    
+    Returns:
+        tuple: the beginning and end of the growing season as strings. e.g. ('4', '8')
+    '''
+    # bring in calendar
+    with open(crop_cal_name, 'r') as fp:
+        calendar_contents = fp.read()
+    # only keep lines starting with correct unit code
+    pattern = re.compile(fr'\b{unit_name_start}\s+\d+\s\d+[^\n\d]+(\d+.\d*)\s+(\d+)\s+(\d+).*')     # looks for the exact pattern that the lines take and groups the area, beginning month, and end month for easy access later
+    matches = pattern.finditer(calendar_contents)
+    # pull out areas and find the largest
+    areas = [match.group(1) for match in matches]
+    areas = floatify(areas)
+    largest_index = areas.index(max(areas))
+    # create growing season tuples and return the largest
+    matches = pattern.finditer(calendar_contents)
+    growing_seasons = [(match.group(2), match.group(3)) for match in matches]
+
+    return growing_seasons[largest_index]
 
 def test():
-    contents = precipFileParser('precip.1950', [2], 4)
-    print(contents[0])
-    # print(contents)
+    test = cropCalendarParser(404000)
+    print(test) 
 
 if __name__ == '__main__':
     test()
