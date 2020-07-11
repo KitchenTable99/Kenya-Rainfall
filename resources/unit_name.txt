@@ -1,0 +1,403 @@
+UnitCode	UnitName
+4000	Afghanistan
+8000	Albania
+12000	Algeria
+16000	American Samoa
+20000	Andorra
+24000	Angola
+28000	Antigua and Barbuda
+31000	Azerbaijan
+32001	Argentina_Buenos Aires
+32002	Argentina_Catamarca
+32003	Argentina_Chaco
+32004	Argentina_Chubut
+32005	Argentina_Cordoba
+32006	Argentina_Corrientes
+32007	Argentina_Entre Rios
+32008	Argentina_Formosa
+32009	Argentina_Jujuy
+32010	Argentina_La Pampa
+32011	Argentina_La Rioja
+32012	Argentina_Mendoza
+32013	Argentina_Misiones
+32014	Argentina_Neuquen
+32015	Argentina_Rio Negro
+32016	Argentina_Salta
+32017	Argentina_San Juan
+32018	Argentina_San Luis
+32019	Argentina_Santa Cruz
+32020	Argentina_Santa Fe
+32021	Argentina_Santiago del Estero
+32022	Argentina_Tierra del Fuego
+32023	Argentina_Tucuman
+32024	Argentina_Distrito Federal
+36001	Australia_Australian Capital Territory
+36002	Australia_New South Wales
+36003	Australia_Northern Territories
+36004	Australia_Queensland
+36005	Australia_South Australia
+36006	Australia_Tasmania
+36007	Australia_Victoria
+36008	Australia_Western Australia
+40000	Austria
+44000	Bahamas
+48000	Bahrain
+50000	Bangladesh
+51000	Armenia
+52000	Barbados
+56000	Belgium
+60000	Bermuda
+64000	Bhutan
+68000	Bolivia
+70000	Bosnia and Herzegovina
+72000	Botswana
+76001	Brazil_Acre
+76002	Brazil_Alagoas
+76003	Brazil_Amapa
+76004	Brazil_Amazonas
+76005	Brazil_Bahia
+76006	Brazil_Ceara
+76007	Brazil_Distrito Federal
+76008	Brazil_Espirito Santo
+76009	Brazil_Goias
+76010	Brazil_Maranhao
+76011	Brazil_Mato Grosso
+76012	Brazil_Mato Grosso do Sul
+76013	Brazil_Minas Gerais
+76014	Brazil_Para
+76015	Brazil_Paraiba
+76016	Brazil_Parana
+76017	Brazil_Pernambuco
+76018	Brazil_Piaui
+76019	Brazil_Rio de Janeiro
+76020	Brazil_Rio Grande do Norte
+76021	Brazil_Rio Grande do Sul
+76022	Brazil_Rondonia
+76023	Brazil_Roraima
+76024	Brazil_Santa Catarina
+76025	Brazil_Sao Paulo
+76026	Brazil_Sergipe
+76027	Brazil_Tocantins
+84000	Belize
+86000	British Indian Ocean Territory
+90000	Solomon Islands
+92000	British Virgin Islands
+96000	Brunei
+100000	Bulgaria
+104000	Myanmar
+108000	Burundi
+112000	Belarus
+116000	Cambodia
+120000	Cameroon
+124000	Canada
+132000	Cape Verde
+136000	Cayman Islands
+140000	Central African Republic
+144000	Sri Lanka
+148000	Chad
+152000	Chile
+156001	China_Anhui
+156002	China_Beijing & Tianjin
+156003	China_Chongqing
+156004	China_Fujian
+156005	China_Gansu
+156006	China_Guangdong
+156007	China_Guangxi
+156008	China_Guizhou
+156009	China_Hainan
+156010	China_Hebei
+156011	China_Heilongjiang
+156012	China_Henan
+156013	China_Hubei
+156014	China_Hunan
+156015	China_Nei Monggol
+156016	China_Jiangsu
+156017	China_Jiangxi
+156018	China_Jilin
+156019	China_Liaoning
+156020	China_Ningxia
+156021	China_Qinghai
+156022	China_Shaanxi
+156023	China_Shangdong
+156024	China_Shanghai
+156025	China_Shanxi
+156026	China_Sichuan
+156027	China_Tibet_(Xizang)
+156028	China_Xinjiang
+156029	China_Yunnan
+156030	China_Zhejiang
+156031	China_Hong_Kong
+158000	Taiwan, Province of China
+162000	Christmas Island
+166000	Cocos (Keeling) Islands
+170000	Colombia
+174000	Comoros
+175000	Mayotte
+178000	Congo, Rep
+180000	Congo, Dem. Rep.
+184000	Cook Islands
+188000	Costa Rica
+191000	Croatia
+192000	Cuba
+196000	Cyprus
+203000	Czech Republic
+204000	Benin
+208000	Denmark
+212000	Dominica
+214000	Dominican Republic
+218000	Ecuador
+222000	El Salvador
+226000	Equatorial Guinea
+231000	Ethiopia
+232000	Eritrea
+233000	Estonia
+234000	Faroe Islands
+238000	Falkland Islands (Malvinas)
+242000	Fiji
+246000	Finland
+250000	France
+254000	French Guyana
+258000	French Polynesia
+262000	Djibouti
+266000	Gabon
+268000	Georgia
+270000	Gambia
+275000	Palestine (Gaza Strip and West Bank)
+276000	Germany
+288000	Ghana
+296000	Kiribati
+300000	Greece
+304000	Greenland
+308000	Grenada
+312000	Guadeloupe
+316000	Guam
+320000	Guatemala
+324000	Guinea
+328000	Guyana
+332000	Haiti
+340000	Honduras
+348000	Hungary
+352000	Iceland
+356001	India_Andra Pradesh
+356002	India_Arunachal Pradesh
+356003	India_Assam
+356004	India_Bihar
+356005	India_Chandigarh
+356006	India_Chhatisgarh
+356007	India_D & N Haveli
+356008	India_Daman & Diu
+356009	India_Dehli
+356010	India_Goa
+356011	India_Gujarat
+356012	India_Haryana
+356013	India_Himachal_Pradesh
+356014	India_Jammu & Kashmir
+356015	India_Jharkhand
+356016	India_Karnataka
+356017	India_Kerala
+356018	India_Madhya Pradesh
+356019	India_Maharastra
+356020	India_Manipur
+356021	India_Meghalaya
+356022	India_Mizoram
+356023	India_Nagaland
+356024	India_Orissa
+356025	India_Pondicherry
+356026	India_Punjab
+356027	India_Rajastan
+356028	India_Sikkim
+356029	India_Tamil Nadu
+356030	India_Tripura
+356031	India_Uttaranchal
+356032	India_Uttar Pradesh
+356033	India_West Bengal
+356034	India_Andaman and Nicobar
+356035	India_Lakshadweep
+360001	Indonesia_Java
+360002	Indonesia_Outside Java
+364000	Iran
+368000	Iraq
+372000	Ireland
+376000	Israel
+380000	Italy
+384000	Cote D'Ivoire
+388000	Jamaica
+392000	Japan
+398000	Kazakhstan
+400000	Jordan
+404000	Kenya
+408000	Korea, Democratic People's Republic of
+410000	Korea, Republic of
+414000	Kuwait
+417000	Kyrgyzstan
+418000	Laos
+422000	Lebanon
+426000	Lesotho
+428000	Latvia
+430000	Liberia
+434000	Libya
+438000	Liechtenstein
+440000	Lithuania
+442000	Luxembourg
+450000	Madagascar
+454000	Malawi
+458000	Malaysia
+462000	Maldives
+466000	Mali
+470000	Malta
+474000	Martinique
+478000	Mauritania
+480000	Mauritius
+484000	Mexico
+496000	Mongolia
+498000	Moldova Republic of
+499000	Montenegro
+500000	Montserrat
+504000	Morocco
+508000	Mozambique
+512000	Oman
+516000	Namibia
+520000	Nauru
+524000	Nepal
+528000	Netherlands
+530000	Netherlands Antilles
+533000	Aruba
+540000	New Caledonia
+548000	Vanuatu
+554000	New Zealand
+558000	Nicaragua
+562000	Niger
+566000	Nigeria
+570000	Niue
+574000	Norfolk Island
+578000	Norway
+580000	Northern Mariana Islands
+583000	Federated States of Micronesia
+584000	Marshall Islands
+585000	Pacific Islands (Palau)
+586000	Pakistan
+591000	Panama
+598000	Papua New Guinea
+600000	Paraguay
+604000	Peru
+608000	Philippines
+612000	Pitcairn Islands
+616000	Poland
+620000	Portugal
+624000	Guinea Bissau
+626000	Timor Leste (East Timor)
+630000	Puerto Rico
+634000	Qatar
+638000	Reunion
+642000	Romania
+643000	Russian Federation
+646000	Rwanda
+654000	St. Helena
+659000	Saint Kitts and Nevis
+660000	Anguilla
+662000	Saint Lucia
+666000	St. Pierre and Miquelon
+670000	Saint Vincent and the Grenadines
+674000	San Marino
+678000	Sao Tome and Principe
+682000	Saudi Arabia
+686000	Senegal
+688000	Serbia (including Kosovo)
+690000	Seychelles
+694000	Sierra Leone
+702000	Singapore
+703000	Slovakia
+704000	Vietnam
+705000	Slovenia
+706000	Somalia
+710000	South Africa
+716000	Zimbabwe
+724000	Spain
+732000	Western Sahara
+736000	Sudan
+740000	Suriname
+744000	Jan Mayen, Svalbard
+748000	Swaziland
+752000	Sweden
+756000	Switzerland
+760000	Syria
+762000	Tajikistan
+764000	Thailand
+768000	Togo
+772000	Tokelau
+776000	Tonga
+780000	Trinidad and Tobago
+784000	United Arab Emirates
+788000	Tunisia
+792000	Turkey
+795000	Turkmenistan
+796000	Turks and Caicos Islands
+798000	Tuvalu
+800000	Uganda
+804000	Ukraine
+807000	Macedonia
+818000	Egypt
+826000	United Kingdom
+834000	Tanzania
+840001	United States of America_Alabama
+840002	United States of America_Alaska
+840003	United States of America_Arizona
+840004	United States of America_Arkansas
+840005	United States of America_California
+840006	United States of America_Colorado
+840007	United States of America_Conneticut
+840008	United States of America_Delaware
+840009	United States of America_Florida
+840010	United States of America_Georgia
+840011	United States of America_Hawaii
+840012	United States of America_Idaho		
+840013	United States of America_Illinois		
+840014	United States of America_Indiana		
+840015	United States of America_Iowa		
+840016	United States of America_Kansas		
+840017	United States of America_Kentucky		
+840018	United States of America_Louisiana		
+840019	United States of America_Maine		
+840020	United States of America_Maryland		
+840021	United States of America_Massachusetts		
+840022	United States of America_Michigan		
+840023	United States of America_Minnesota		
+840024	United States of America_Mississippi		
+840025	United States of America_Missouri		
+840026	United States of America_Montana		
+840027	United States of America_Nebraska		
+840028	United States of America_Nevada		
+840029	United States of America_New Hampshire		
+840030	United States of America_New Jersey		
+840031	United States of America_New Mexico		
+840032	United States of America_New York		
+840033	United States of America_North Carolina		
+840034	United States of America_North Dakota		
+840035	United States of America_Ohio		
+840036	United States of America_Oklahoma		
+840037	United States of America_Oregon		
+840038	United States of America_Pennsylvania		
+840039	United States of America_Rhode Island		
+840040	United States of America_South Carolina		
+840041	United States of America_South Dakota		
+840042	United States of America_Tennessee		
+840043	United States of America_Texas		
+840044	United States of America_Utah		
+840045	United States of America_Vermont		
+840046	United States of America_Virginia		
+840047	United States of America_Washington		
+840048	United States of America_West Virginia		
+840049	United States of America_Wisconsin		
+840050	United States of America_Wyoming		
+840051	United States of America_District_of_Columbia		
+850000	US Virgin Islands		
+854000	Burkina Faso		
+858000	Uruguay		
+860000	Uzbekistan		
+862000	Venezuela		
+876000	Wallis and Futuna		
+882000	Samoa (Western Samoa)		
+887000	Yemen		
+894000	Zambia
+991000	Small Islands
+992000	Antarctica, Rest of Islands
