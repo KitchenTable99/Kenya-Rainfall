@@ -3,6 +3,7 @@
 #
 
 from haversine import haversine
+import file_parsers as fp
 
 class DHSLocation():
 
@@ -15,13 +16,23 @@ class DHSLocation():
         '''
         self.center = center_coords
         station_distances = [haversine(coord, center_coords) for coord in data_coords]      # haversine calculates dist between points in km
-        self.station_indices = [index for index, dist in enumerate(station_distances) if dist <= 10]         # to change the distance needed to include a station, that last number needs to be changed
-
-
+        self.station_indices = [index for index, dist in enumerate(station_distances) if dist <= 40]         # to change the distance needed to include a station, that last number needs to be changed
 
 
 def test():
-    tmep = DHSLocation([-178, 30], [[-170, 30], [-30, 55]])
+    months = fp.cropCalendarParser(404000)
+    month_range = list(range(int(months[0]), int(months[1])))
+
+    precip_data = fp.precipFileParser('./resources/precip.1977', month_range, False)
+
+    precip_coords = [row[0] for row in precip_data]
+    
+    real_precip_coords = [[coord[1], coord[0]] for coord in precip_coords]
+
+
+
+    tmep = DHSLocation([0, 38], real_precip_coords)
+    print(tmep.station_indices)
 
 if __name__ == '__main__':
     test()
