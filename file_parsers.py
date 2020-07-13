@@ -178,7 +178,7 @@ def cropCalendarParser(unit_name_start, crop_cal_name='./resources/cropping_cale
     largest_index = areas.index(max(areas))
     # create growing season tuples and return the largest
     matches = pattern.finditer(calendar_contents)
-    growing_seasons = [(match.group(2), match.group(3)) for match in matches]
+    growing_seasons = [[match.group(2), match.group(3)] for match in matches]
 
     return growing_seasons[largest_index]
 
