@@ -2,37 +2,39 @@
 # Created by Caleb Bitting (Colby class of 2023)
 #
 
-from haversine import haversine
+import os
 import file_parsers as fp
+from tqdm import tqdm as progress
 
-class DHSLocation():
+def importPrecipData(month_range, precip_data_folder='./resources/precip_data', sum_data=True):
+    '''This function imports all precip data in ./resources/precip_data or another specified folder
+    
+    Args:
+        month_range (list): a list of months across which to sum the rainfall
+        precip_data_folder (str, optional): a string representing the path to the folder in which all of the .precip files are stored. Defaults to './resources/precip_data'
+        sum_data (bool, optional): whether or not to sum the rainfall data across the selected months. Defaults to True
+    
+    Returns:
+        list: a list of parsed precip data. Of the form [[[x1, y1], SUM2], [[x2, y2], SUM2], ...] where SUM is the sum of the rainfall in the selected months
+    '''
+    # get list of precip files
+    os.system(f'cd {precip_data_folder}; ls precip* > ../../precip.txt')
+    with open('precip.txt', 'r') as f:
+        precip_contents = f.read()
+    precip_contents = precip_contents.split('\n')
+    precip_contents.pop()
+    os.system('rm precip.txt')
+    # modify the path variable
+    precip_contents = ['./resources/precip_data/' + file for file in precip_contents]
+    # create precip data list for them all
+    precip_data = [fp.precipFileParser(path, month_range, sum_data) for path in progress(precip_contents, desc='Importing precip data')]
 
-    def __init__(self, center_coords, data_coords):
-        '''Init method
-        
-        Args:
-            center_coords (list): a two-element list representing the latitude and longitude of the center of DHSCLUST
-            data_coords (list): a 2-D list of coordinate points of the potential data centers
-        '''
-        self.center = center_coords
-        station_distances = [haversine(coord, center_coords) for coord in data_coords]      # haversine calculates dist between points in km
-        self.station_indices = [index for index, dist in enumerate(station_distances) if dist <= 40]         # to change the distance needed to include a station, that last number needs to be changed
+    return precip_data
 
 
 def test():
-    months = fp.cropCalendarParser(404000)
-    month_range = list(range(int(months[0]), int(months[1])))
-
-    precip_data = fp.precipFileParser('./resources/precip.1977', month_range, False)
-
-    precip_coords = [row[0] for row in precip_data]
-    
-    real_precip_coords = [[coord[1], coord[0]] for coord in precip_coords]
-
-
-
-    tmep = DHSLocation([0, 38], real_precip_coords)
-    print(tmep.station_indices)
+    test = importPrecipData([4])
+    print(test)
 
 if __name__ == '__main__':
     test()
