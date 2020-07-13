@@ -26,7 +26,7 @@ def importPrecipData(month_range, precip_data_folder='./resources/precip_data', 
     precip_contents = precip_contents.split('\n')
     precip_contents.pop()
     if testing:
-        precip_contents = precip_contents[:10]
+        precip_contents = precip_contents[:10]      # only take the first ten items if testing is passed as True
     os.system('rm precip.txt')
     # modify the path variable
     precip_contents = ['./resources/precip_data/' + file for file in precip_contents]
@@ -44,10 +44,12 @@ def commandLineParser():
 
 def test():
     cmd_args = commandLineParser()
-    month_range = fp.cropCalendarParser(cmd_args.unit_code)
-    month_range = [int(month) for month in month_range]
-    test = importPrecipData(month_range, testing=True)
-    print(test[0])
+    # month_range = fp.cropCalendarParser(cmd_args.unit_code)
+    # month_range = [int(month) for month in month_range]
+    # test = importPrecipData(month_range, testing=True)
+    # print(test[0])
+    st_coords = fp.precipFileParser('./resources/precip_data/precip.1977', [4, 8], return_coords=True)
+    gdf = fp.shapeFileParser('./resources/kenya_dhs_2013/KEGE43FL.shp', st_coords)
 
 if __name__ == '__main__':
     test()
