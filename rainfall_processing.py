@@ -3,16 +3,18 @@
 #
 
 import os
+import argparse
 import file_parsers as fp
 from tqdm import tqdm as progress
 
-def importPrecipData(month_range, precip_data_folder='./resources/precip_data', sum_data=True):
+def importPrecipData(month_range, precip_data_folder='./resources/precip_data', sum_data=True, testing=False):
     '''This function imports all precip data in ./resources/precip_data or another specified folder
     
     Args:
         month_range (list): a list of months across which to sum the rainfall
         precip_data_folder (str, optional): a string representing the path to the folder in which all of the .precip files are stored. Defaults to './resources/precip_data'
         sum_data (bool, optional): whether or not to sum the rainfall data across the selected months. Defaults to True
+        testing (bool, optional): wheter or not the function is in testing mode. If so, only the first ten precip files will be considered for speed. Defaults to False
     
     Returns:
         list: a list of parsed precip data. Of the form [[[x1, y1], SUM2], [[x2, y2], SUM2], ...] where SUM is the sum of the rainfall in the selected months
@@ -23,6 +25,8 @@ def importPrecipData(month_range, precip_data_folder='./resources/precip_data', 
         precip_contents = f.read()
     precip_contents = precip_contents.split('\n')
     precip_contents.pop()
+    if testing:
+        precip_contents = precip_contents[:10]
     os.system('rm precip.txt')
     # modify the path variable
     precip_contents = ['./resources/precip_data/' + file for file in precip_contents]
@@ -31,10 +35,19 @@ def importPrecipData(month_range, precip_data_folder='./resources/precip_data', 
 
     return precip_data
 
+def commandLineParser():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('unit_code', type=int, help='the unit code that designates the area of interest. See ./resources/unit_name.txt for list of unit codes.')
+    args = parser.parse_args()
+
+    return args
 
 def test():
-    test = importPrecipData([4])
-    print(test)
+    cmd_args = commandLineParser()
+    month_range = fp.cropCalendarParser(cmd_args.unit_code)
+    month_range = [int(month) for month in month_range]
+    test = importPrecipData(month_range, testing=True)
+    print(test[0])
 
 if __name__ == '__main__':
     test()
