@@ -2,10 +2,23 @@
 # Caleb Bitting (Colby Class of 2023)
 # Written for research for Professor Daniel LaFave at Colby College
 import re
+import time
 import itertools
 import geopandas as gpd
 from shapely.geometry import Point
 from tqdm import tqdm as progress
+
+def timeIt(f):
+
+    def wrapper(*args, **kwargs):
+        start = time.time()
+        print('timeIt decorator called')
+        output = f(*args, **kwargs)
+        end = time.time()
+        print(f'{f.__name__} took {end - start} seconds to run.')        # time it
+        return output
+
+    return wrapper
 
 
 def stationCoords(precip_data_list, latlong=False):
@@ -38,7 +51,7 @@ def pointDist(point1, pointlist):
     '''
     distances = [point1.distance(point2) for point2 in pointlist]       # uses methods built into shapely.geometry
     return distances
-
+@timeIt
 def shapeFileParser(file_path, station_coords, testing=False):
     '''This function onboards the shapefile data to create the necessary railfall data
     
@@ -194,8 +207,8 @@ def cropCalendarParser(unit_name_start, crop_cal_name='./resources/cropping_cale
     return growing_seasons[largest_index]
 
 def test():
-    precip_data = precipFileParser('./resources/precip_data/precip.1977', [12, 3], return_coords=True)
-    print(precip_data[-1])
+    st_coords = precipFileParser('./resources/precip_data/precip.1977', [4, 8], return_coords=True)
+    gdf = shapeFileParser('./resources/kenya_dhs_2013/KEGE43FL.shp', st_coords)
 
 if __name__ == '__main__':
     test()
