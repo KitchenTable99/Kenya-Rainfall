@@ -66,59 +66,64 @@ def shapeFileParser(file_path, station_coords, testing=False):
 
     return gdf
 
-def precipFileParser(file_path, months, sum_rainfall):
-    '''This function parses a YYYY.precip file.
+def precipFileParser(file_path, months, sum_rainfall=True, return_coords=False):
+    '''This file pulls out the rainfall data in a specific precip.YYYY file.
     
     Args:
-        file_path (str): the path to get to the YYYY.precip file
-        months (list): the numerical representation of the months to include. (e.g. [5, 6, 7, 8, 9] will keep the months May through September)
-        sum_rainfall (bool): whether or not to sum the months kept
+        file_path (string): a string representing the path to the precip.YYYY file to be parsed
+        months (list): a two-element list of the numeric value of the start month and the numeric value of the end month
+        sum_rainfall (bool, optional): whether or not to sum the rainfall data. Defaults to True
+        return_coords (bool, optional): whether to return rainfall data or coordinate values. Defaults to False (data returned).
     
     Returns:
-        3D list: the parsed contents. Of the form [[[x1, y1], may1, june1, july1, august1, september1], [[x2, y2], may2, june2, july2, august2, september2], ... ]
+        list: if return_coords is passed as True, the return value will be a two-dimentional list of the form [[x1, y1], [x2, y2], ...].
+              if sum_rainfall is passed as True, the return value will be a one-dimentional list of the total rainfall (in mm) that fell during the span of the months passed.
+              If sum_rainfall is passed as False, the return value will be a two-dimentional list of the monthly rainfall values (in mm) for each station during the desired month ran
     '''
     # input validation
     if not isinstance(file_path, str): raise TypeError(f'file_path must be a string. You passed a {type(file_path)}.')
     if not isinstance(months, list): raise TypeError(f'months must be a list. You passed a {type(months)}.')
+    if len(months) != 2: raise ValueError(f'months must be a list of length two. You passed a list of length {len(months)}.')
     if not isinstance(sum_rainfall, bool): raise TypeError(f'sum_rainfall must be a boolean. You passed a {type(sum_rainfall)}.')
+    if not isinstance(return_coords, bool): raise TypeError(f'return_coords must be a boolean. You passed a {type(return_coords)}.')
 
     # bring in file
     with open(file_path, 'r') as fp:
         raw_file_contents = fp.read()
-    # splt into coords and months
-    # split into rows and then split by spaces. drop all items that are the empty string
-    file_contents = raw_file_contents.split('\n')
-    file_contents = [row.split(' ') for row in file_contents]
-    drop_contents = [dropEmptyString(row) for row in file_contents]
-    # drop any list at the very end that is the empty list
-    while drop_contents[-1] == []:
-        drop_contents.pop()
-    # turn everything into a float
-    drop_contents = floatify(drop_contents)
-    # separate the coordinate pairs from the rainfall data
-    file_contents = []
-    for row in drop_contents:
-        temp_row = []
-        temp_row.append([row[0], row[1]])       # coordinate pair
-        for item in row[2:]:                    # add the rest of the items one by one
-            temp_row.append(item)
-        file_contents.append(temp_row)
-    # filter out irrelevant months
-    months.append(0)
-    month_filter = [[row[index] for index in range(len(row)) if index in months]for row in file_contents]
-    # sum if desired
-    if sum_rainfall:
-        sum_list = []
-        for row in file_contents:
-            temp_row = []
-            temp_row.append(row[0])
-            total = sum(row[1:])
-            temp_row.append(total)
-            sum_list.append(temp_row)
-        return sum_list                        # the return statement in the case sum_ranfall == True
+    file_contents = raw_file_contents.split('\n')                   # create rows
+    # return coords if that's the desired item
+    if return_coords:
+        file_contents = [row[:16] for row in file_contents]             # only keep coords
+        file_contents = [row.split(' ') for row in file_contents]       # split long, lat coords
+        file_contents = dropEmptyString(file_contents)                  # drop empty strings
+        while file_contents[-1] == []:                                  # drop trailing empty lists
+            file_contents.pop()                                             
+        file_contents = floatify(file_contents)                         # turn into floats
+        return file_contents
+    else:       # return data most time though
+        # pull out rainfall data
+        file_contents = [row[16:] for row in file_contents]             # get rid of coords
+        file_contents = [row.split(' ') for row in file_contents]       # split monthly rainfall
+        file_contents = dropEmptyString(file_contents)                  # drop empty strings
+        while file_contents[-1] == []:                                  # drop trailing empty lists
+            file_contents.pop()                                             
+        file_contents = floatify(file_contents)                         # turn into floats
+        # filter out irrelevant months
+        pointer = months[0] - 1             # index of start month
+        month_filter = [pointer]
+        while pointer != months[1] - 1:     # add every index until the index of the end month is reached. Wrap at 11.
+            if pointer == 11:
+                pointer = 0
+            else:
+                pointer += 1
+            month_filter.append(pointer)
+        # sum rainfall if desired
+        if sum_rainfall:
+            sum_data = [sum([item for index, item in enumerate(row) if index in month_filter]) for row in file_contents]
 
+            return sum_data
 
-    return month_filter                        # the return statement in the case sum_rainfall == False
+        return [[item for index, item in enumerate(row) if index in month_filter] for row in file_contents]        # the return statement in the case sum_rainfall == False
 
 def floatify(lst):
     '''This function turns every item in a list into a float. If a nested list is passed, the function will be called recursively on the inside lists.
@@ -141,7 +146,7 @@ def floatify(lst):
     return lst
 
 def dropEmptyString(lst):
-    '''Drops every instance of the empty string in a list
+    '''Drops every instance of the empty string in a list. Calls recursively if a multi-dimentional list is passed.
     
     Args:
         lst (list): pre-processed list with empty strings potentially present
@@ -149,8 +154,14 @@ def dropEmptyString(lst):
     Returns:
         list: the same input lst but with all empty strings dropped
     '''
-    processed = [item for item in lst if item != '']
-    return processed
+    complete_list = []
+    for item in lst:
+        if isinstance(item, list):
+            complete_list.append(dropEmptyString(item))
+        elif item != '':
+            complete_list.append(item)
+
+    return complete_list
 
 def cropCalendarParser(unit_name_start, crop_cal_name='./resources/cropping_calendar_rainfed.txt'):
     '''This function parses the crop calendar to obtain the growing season of the predominant crop in a certain area.
@@ -183,9 +194,8 @@ def cropCalendarParser(unit_name_start, crop_cal_name='./resources/cropping_cale
     return growing_seasons[largest_index]
 
 def test():
-    precip_data = precipFileParser('./resources/precip.1977', [4, 8], False)
-    st_coords = stationCoords(precip_data)
-    shapeFileParser('./kenya_dhs_2013/KEGE43FL.shp', st_coords, testing=True)
+    precip_data = precipFileParser('./resources/precip_data/precip.1977', [12, 3], return_coords=True)
+    print(precip_data[-1])
 
 if __name__ == '__main__':
     test()
