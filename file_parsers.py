@@ -9,7 +9,8 @@ from shapely.geometry import Point
 from tqdm import tqdm as progress
 
 def timeIt(f):
-
+    '''This decorator times a function.
+    '''
     def wrapper(*args, **kwargs):
         start = time.time()
         print('timeIt decorator called')
@@ -53,9 +54,9 @@ def shapeFileParser(file_path, station_coords, testing=False):
     coord_tuples = [tuple(coord_list) for coord_list in station_coords]
     points = [Point(tup) for tup in coord_tuples]
     # find the distance between center coord and every station (print out progress bar)
-    alldist = [pointDist(geom, lst) for geom, lst in progress(zip(gdf['geometry'], itertools.repeat(points)), total=len(gdf['geometry']), desc='Calculating Distances')]
+    alldist = [pointDist(geom, lst) for geom, lst in progress(zip(gdf['geometry'], itertools.repeat(points)), total=len(gdf['geometry']), desc='Importing shapefile')]
     # create a new column and assign it the relevant station indices
-    monitor_stations = [[index for index, dist in enumerate(row) if dist <= 10] for row in progress(alldist, total=len(alldist), desc='Determining Close Stations')]
+    monitor_stations = [[index for index, dist in enumerate(row) if dist <= 10] for row in alldist]
     gdf['Station Indices'] = monitor_stations
 
     return gdf

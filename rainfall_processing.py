@@ -4,6 +4,7 @@
 
 import os
 import argparse
+import itertools
 import file_parsers as fp
 from tqdm import tqdm as progress
 
@@ -36,20 +37,49 @@ def importPrecipData(month_range, precip_data_folder='./resources/precip_data', 
     return precip_data
 
 def commandLineParser():
+    '''This function parses the command line arguments
+    
+    Returns:
+        argparse.namespace: an argparse namespace representing the command line arguments
+    '''
     parser = argparse.ArgumentParser()
     parser.add_argument('unit_code', type=int, help='the unit code that designates the area of interest. See ./resources/unit_name.txt for list of unit codes.')
+    parser.add_argument('csv_name', type=str, help='the name of the csv to which this program will write.')
+    parser.add_argument('--testing', '-t', action='store_true', help='enter testing mode. All functions will be passed testing=True where possible.')
     args = parser.parse_args()
 
     return args
 
-def test():
+def generateRainFallSums(index_list, precip_data):
+    '''This function generates all rainfall sums for a particular location.
+    
+    Args:
+        index_list (list): all of the relevant indices. 'Station Indices' column in GeoDataFrame.
+        precip_data (list): 2-D list of all rainfall data. Returned by fp.precipFileParser()
+    
+    Returns:
+        list: the sums for every rainfall year of the relevant stations. Of the form [sum1, sum2, sum3, ...]
+    '''
+    rainfall_totals = [sum([item for index, item in enumerate(lst) if index in index_list]) for lst in progress(precip_data, leave=False)]
+    return rainfall_totals
+
+def main():
+    # get command line arguments
     cmd_args = commandLineParser()
-    # month_range = fp.cropCalendarParser(cmd_args.unit_code)
-    # month_range = [int(month) for month in month_range]
-    # test = importPrecipData(month_range, testing=True)
-    # print(test[0])
+    # parse month range
+    month_range = fp.cropCalendarParser(cmd_args.unit_code)
+    month_range = [int(month) for month in month_range]
+    # get precip data
+    precip_data = importPrecipData(month_range, testing=cmd_args.testing)
+    # get geodata
     st_coords = fp.precipFileParser('./resources/precip_data/precip.1977', [4, 8], return_coords=True)
-    gdf = fp.shapeFileParser('./resources/kenya_dhs_2013/KEGE43FL.shp', st_coords)
+    gdf = fp.shapeFileParser('./resources/kenya_dhs_2013/KEGE43FL.shp', st_coords, testing=cmd_args.testing)
+    # generate rainfall totals
+    rainfall_totals = [generateRainFallSums(index_list, data) for index_list, data in progress(zip(gdf['Station Indices'], itertools.repeat(precip_data)), total=len(gdf['Station Indices']), desc='Calculating rainfall sums')]
+    gdf['Rainfall Totals'] = rainfall_totals
+    # store in csv
+    if '.csv' not in cmd_args.csv_name: cmd_args.csv_name += '.csv'
+    gdf.to_csv(cmd_args.csv_name)
 
 if __name__ == '__main__':
-    test()
+    main()
