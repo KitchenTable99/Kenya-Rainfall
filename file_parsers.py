@@ -34,6 +34,25 @@ def pointDist(point1, pointlist):
     distances = [point1.distance(point2) for point2 in pointlist]       # uses methods built into shapely.geometry
     return distances
 
+def precipListParser(file_path, testing=False):
+    '''This function parses the list of precip names
+    
+    Args:
+        file_path (str): a string representing the path to the file containing the names of the precip files. Defaults to the empty string.
+        testing (bool, optional): whether or not to only keep the first ten precip files.
+    
+    Returns:
+        list: a list of the names of the precip files.
+    '''
+    with open(file_path, 'r') as f:
+        precip_contents = f.read()
+    precip_contents = precip_contents.split('\n')
+    precip_contents.pop()
+    if testing:
+        precip_contents = precip_contents[:10]      # only take the first ten items if testing is passed as True
+
+    return precip_contents
+
 def shapeFileParser(file_path, station_coords, testing=False):
     '''This function onboards the shapefile data to create the necessary railfall data
     
