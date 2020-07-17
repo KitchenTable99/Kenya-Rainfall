@@ -5,7 +5,9 @@
 import os
 import argparse
 import itertools
+import statistics
 import file_parsers as fp
+from termcolor import cprint
 from tqdm import tqdm as progress
 
 def importPrecipData(month_range, windows='', precip_data_folder='./resources/precip_data', testing=False):
@@ -21,12 +23,12 @@ def importPrecipData(month_range, windows='', precip_data_folder='./resources/pr
         list: a list of parsed precip data. Of the form [[[x1, y1], SUM2], [[x2, y2], SUM2], ...] where SUM is the sum of the rainfall in the selected months
     '''
     # get list of precip files
-    if windows == '':
+    if windows:
+        precip_contents = fp.precipListParser(windows, testing=testing)
+    else:
         os.system(f'cd {precip_data_folder}; ls precip* > ../../precip.txt')
         precip_contents = fp.precipListParser('precip.txt', testing=testing)
         os.system('rm precip.txt')
-    else:
-        precip_contents = fp.precipListParser(windows, testing=testing)
     # modify the path variable
     precip_contents = ['./resources/precip_data/' + file for file in precip_contents]
     # create precip data list for them all
@@ -42,8 +44,9 @@ def commandLineParser():
     '''
     parser = argparse.ArgumentParser()
     parser.add_argument('unit_code', type=int, help='the unit code that designates the area of interest. See ./resources/unit_name.txt for list of unit codes.')
-    parser.add_argument('csv_name', type=str, help='the name of the csv to which this program will write.')
+    parser.add_argument('--csv_name', '-n', type=str, default='data.csv', help='the name of the csv to which this program will write. Defaults to data.csv')
     parser.add_argument('--testing', '-t', action='store_true', help='enter testing mode. All functions will be passed testing=True where possible.')
+    parser.add_argument('--station_dist', '-d', type=float, default=10., help='the maximum distance (in km) allowed between a DHS center and a precip grid center. Defaults to 10.0 km.')
     parser.add_argument('--windows', '-w', type=str, help='the file path for the list of the names of precip files.')
     args = parser.parse_args()
 
@@ -59,7 +62,7 @@ def generateRainFallSums(index_list, precip_data):
     Returns:
         list: the sums for every rainfall year of the relevant stations. Of the form [sum1, sum2, sum3, ...]
     '''
-    rainfall_totals = [sum([item for index, item in enumerate(lst) if index in index_list]) for lst in progress(precip_data, leave=False)]
+    rainfall_totals = [sum([item for index, item in enumerate(lst) if index in index_list]) for lst in precip_data]
     return rainfall_totals
 
 def main():
@@ -72,13 +75,24 @@ def main():
     precip_data = importPrecipData(month_range, windows=cmd_args.windows, testing=cmd_args.testing)
     # get geodata
     st_coords = fp.precipFileParser('./resources/precip_data/precip.1977', [4, 8], return_coords=True)
-    gdf = fp.shapeFileParser('./resources/kenya_dhs_2013/KEGE43FL.shp', st_coords, testing=cmd_args.testing)
+    gdf = fp.shapeFileParser('./resources/kenya_dhs_2013/KEGE43FL.shp', st_coords, cmd_args, testing=cmd_args.testing)
     # generate rainfall totals
-    rainfall_totals = [generateRainFallSums(index_list, data) for index_list, data in progress(zip(gdf['Station Indices'], itertools.repeat(precip_data)), total=len(gdf['Station Indices']), desc='Calculating rainfall sums')]
+    station_indices = gdf['Station Indices'].tolist()
+    rainfall_totals = [generateRainFallSums(index_list, data) for index_list, data in progress(zip(station_indices, itertools.repeat(precip_data)), total=len(gdf['Station Indices']), desc='Calculating rainfall sums')]
     gdf['Rainfall Totals'] = rainfall_totals
     # store in csv
     if '.csv' not in cmd_args.csv_name: cmd_args.csv_name += '.csv'
-    gdf.to_csv(cmd_args.csv_name)
+    gdf.to_csv(cmd_args.csv_name, index=False)
+    # print out needed calculation stats
+    station_lengths = [len(lst) for lst in station_indices]     # how many stations were captured
+    _, columns = os.popen('stty size', 'r').read().split()
+    fancy_sep = ['-' for _ in range(int(columns))]
+    print(''.join(fancy_sep))                                   # allow for some eyeball breathing room
+    print(f'The average number of captured stations was {round(statistics.mean(station_lengths), 2)}')
+    if 0 in station_lengths:                                    # warn if any location didn't capture data
+        cprint('WARNING:', 'red', attrs=['reverse', 'blink'])
+        print(f'{station_lengths.count(0)}/{len(station_lengths)} locations did not capture a single precip station.\n\n')
+    else: print('Every location captured at least one precip station.\n\n')
 
 if __name__ == '__main__':
     main()
