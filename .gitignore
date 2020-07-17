@@ -1,6 +1,7 @@
 .DS_Store
 __pycache__/
 resources/.DS_Store
+cleanGamma_data.csv
 data.csv
 gammaProcessed_data.csv
 .ipynb_checkpoints/

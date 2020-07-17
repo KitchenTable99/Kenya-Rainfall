@@ -24,7 +24,7 @@ def percentile(data_list):
 
     return stats.gamma.cdf(target_value, fit_alpha, loc=fit_loc, scale=fit_beta)
 
-def sumSlicing(sum_list, len_years):
+def sumSlicing(sum_list, len_years, verbose=False):
     '''This function generates all percentiles across a list.
     
     Args:
@@ -34,7 +34,7 @@ def sumSlicing(sum_list, len_years):
     Returns:
         list: a list of percentiles fitted to a gamma distribution
     '''
-    pbar = progress(total=len(sum_list)-len_years, leave=False)     # establish a nice progress bar
+    if verbose: pbar = progress(total=len(sum_list)-len_years, leave=False)     # establish a nice progress bar
     leading_pointer = 0
     okazaki_pointer = len_years + 1
     percentile_list = []
@@ -44,8 +44,8 @@ def sumSlicing(sum_list, len_years):
         percentile_list.append(temp)
         leading_pointer += 1
         okazaki_pointer += 1
-        pbar.update(1)  # update progress bar
-    pbar.close()
+        if verbose: pbar.update(1)  # update progress bar
+    if verbose: pbar.close()
 
     return percentile_list
 
@@ -58,6 +58,7 @@ def commandLineParser():
     parser = argparse.ArgumentParser()
     parser.add_argument('file_path', type=str, help='the path to the csv file containing the output of sum_rainfall.py')
     parser.add_argument('len_years', type=int, help='the number of years to use to fit each gamma distribution.')
+    parser.add_argument('--verbose', '-v', action='store_true', help='whether or not to see the intermediate progress bar')
     args = parser.parse_args()
 
     return args
@@ -71,7 +72,7 @@ def main():
     # turn the strings into lists
     rainfall_sums = [json.loads(rainfall_sum) for rainfall_sum in rainfall_sums]
     # calculate percentiles
-    rainfall_percentiles = [sumSlicing(rainfall_sum, cmd_args.len_years) for rainfall_sum in progress(rainfall_sums, desc='Calculating Percentiles')]
+    rainfall_percentiles = [sumSlicing(rainfall_sum, cmd_args.len_years, cmd_args.verbose) for rainfall_sum in progress(rainfall_sums, desc='Calculating Percentiles')]
     # write out data
     df['Rainfall Percentiles'] = rainfall_percentiles
     write_path = 'gammaProcessed_' + cmd_args.file_path
