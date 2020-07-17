@@ -3,6 +3,7 @@
 # Written for research for Professor Daniel LaFave at Colby College
 #
 
+import os
 import json
 import argparse
 import pandas as pd
@@ -76,6 +77,9 @@ def main():
     write_path = 'gammaProcessed_' + cmd_args.file_path
     df.to_csv(write_path, index=False)
     # print out year range
+    _, columns = os.popen('stty size', 'r').read().split()
+    fancy_sep = ['-' for _ in range(int(columns))]
+    print(''.join(fancy_sep))                                   # allow for some eyeball breathing room
     print(f'This program calculated {len(rainfall_percentiles[0])} years worth of percentiles.\nThe list stored in "Rainfall Percentiles" represents data beginning in the year {1950+cmd_args.len_years}.\nThis is assuming that the first precip file contains data from the year 1950.')
 
 if __name__ == '__main__':
