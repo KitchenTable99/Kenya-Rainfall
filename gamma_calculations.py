@@ -63,6 +63,18 @@ def commandLineParser():
 
     return args
 
+def body(sum_list, cmd_args):
+    # calculate percentiles
+    rainfall_percentiles = [sumSlicing(rainfall_sum, cmd_args.len_years, cmd_args.verbose) for rainfall_sum in progress(sum_list, desc='Calculating Percentiles')]
+    if cmd_args.verbose or __name__ == '__main__':
+        # print out year range
+        _, columns = os.popen('stty size', 'r').read().split()
+        fancy_sep = ['-' for _ in range(int(columns))]
+        print(''.join(fancy_sep))                                   # allow for some eyeball breathing room
+        print(f'This program calculated {len(rainfall_percentiles[0])} years worth of percentiles.\nThe list stored in "Rainfall Percentiles" represents data beginning in the year {1950+cmd_args.len_years}.\nThis is assuming that the first precip file contains data from the year 1950.')
+
+    return rainfall_percentiles
+
 def main():
     # import needed materials
     cmd_args = commandLineParser()
@@ -71,17 +83,16 @@ def main():
     rainfall_sums = df['Rainfall Totals'].tolist()
     # turn the strings into lists
     rainfall_sums = [json.loads(rainfall_sum) for rainfall_sum in rainfall_sums]
-    # calculate percentiles
-    rainfall_percentiles = [sumSlicing(rainfall_sum, cmd_args.len_years, cmd_args.verbose) for rainfall_sum in progress(rainfall_sums, desc='Calculating Percentiles')]
-    # write out data
-    df['Rainfall Percentiles'] = rainfall_percentiles
+    # get data into dataframe
+    percentiles = body(rainfall_sums, cmd_args)
+    df['Rainfall Percentiles'] = percentiles
+    # write out
     write_path = 'gammaProcessed_' + cmd_args.file_path
     df.to_csv(write_path, index=False)
-    # print out year range
-    _, columns = os.popen('stty size', 'r').read().split()
-    fancy_sep = ['-' for _ in range(int(columns))]
-    print(''.join(fancy_sep))                                   # allow for some eyeball breathing room
-    print(f'This program calculated {len(rainfall_percentiles[0])} years worth of percentiles.\nThe list stored in "Rainfall Percentiles" represents data beginning in the year {1950+cmd_args.len_years}.\nThis is assuming that the first precip file contains data from the year 1950.')
+
 
 if __name__ == '__main__':
     main()
+
+
+

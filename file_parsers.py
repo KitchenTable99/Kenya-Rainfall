@@ -78,8 +78,9 @@ def shapeFileParser(file_path, station_coords, cmd_args, testing=False):
     latlong_coord_tuples = [(coord_list[1], coord_list[0]) for coord_list in station_coords]
     # find the distance between center coord and every station (print out progress bar)
     alldist = [pointDist(geom, lst) for geom, lst in progress(zip(gdf['geometry'], itertools.repeat(latlong_coord_tuples)), total=len(gdf['geometry']), desc='Importing shapefile')]
+    if cmd_args.determine_distance: return alldist
     # create a new column and assign it the relevant station indices
-    monitor_stations = [[index for index, dist in enumerate(row) if dist <= cmd_args.station_dist] for row in alldist]
+    monitor_stations = [[index for index, dist in enumerate(row) if dist <= cmd_args.distance] for row in alldist]
     gdf['Station Indices'] = monitor_stations
 
     return gdf

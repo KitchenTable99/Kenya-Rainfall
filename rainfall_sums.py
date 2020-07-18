@@ -1,5 +1,6 @@
 # This script will create the rainfall data needed to analyze the economc shocks in Keyna
-# Created by Caleb Bitting (Colby class of 2023)
+# Caleb Bitting (Colby Class of 2023)
+# Written for research for Professor Daniel LaFave at Colby College
 #
 
 import os
@@ -43,10 +44,11 @@ def commandLineParser():
         argparse.namespace: an argparse namespace representing the command line arguments
     '''
     parser = argparse.ArgumentParser()
-    parser.add_argument('unit_code', type=int, help='the unit code that designates the area of interest. See ./resources/unit_name.txt for list of unit codes.')
+    parser.add_argument('--unit_code', required=True, type=int, help='the unit code that designates the area of interest. See ./resources/unit_name.txt for list of unit codes.')
+    parser.add_argument('--distance', required=True, type=float, default=10., help='the maximum distance (in km) allowed between a DHS center and a precip grid center. Defaults to 10.0 km.')
+    parser.add_argument('--shapefile_path', required=True, type=str, help='the path to the .shp file in a shapefile folder. This folder should be expanded from a .zip file.')
     parser.add_argument('--csv_name', '-n', type=str, default='data.csv', help='the name of the csv to which this program will write. Defaults to data.csv')
-    parser.add_argument('--testing', '-t', action='store_true', help='enter testing mode. All functions will be passed testing=True where possible.')
-    parser.add_argument('--station_dist', '-d', type=float, default=10., help='the maximum distance (in km) allowed between a DHS center and a precip grid center. Defaults to 10.0 km.')
+    parser.add_argument('--testing', action='store_true', help='enter testing mode. All functions will be passed testing=True where possible.')
     parser.add_argument('--windows', '-w', type=str, help='the file path for the list of the names of precip files.')
     args = parser.parse_args()
 
@@ -65,9 +67,7 @@ def generateRainFallSums(index_list, precip_data):
     rainfall_totals = [sum([item for index, item in enumerate(lst) if index in index_list]) for lst in precip_data]
     return rainfall_totals
 
-def main():
-    # get command line arguments
-    cmd_args = commandLineParser()
+def body(cmd_args):
     # parse month range
     month_range = fp.cropCalendarParser(cmd_args.unit_code)
     month_range = [int(month) for month in month_range]
@@ -75,14 +75,11 @@ def main():
     precip_data = importPrecipData(month_range, windows=cmd_args.windows, testing=cmd_args.testing)
     # get geodata
     st_coords = fp.precipFileParser('./resources/precip_data/precip.1977', [4, 8], return_coords=True)
-    gdf = fp.shapeFileParser('./resources/kenya_dhs_2013/KEGE43FL.shp', st_coords, cmd_args, testing=cmd_args.testing)
+    gdf = fp.shapeFileParser(cmd_args.shapefile_path, st_coords, cmd_args, testing=cmd_args.testing)
     # generate rainfall totals
     station_indices = gdf['Station Indices'].tolist()
     rainfall_totals = [generateRainFallSums(index_list, data) for index_list, data in progress(zip(station_indices, itertools.repeat(precip_data)), total=len(gdf['Station Indices']), desc='Calculating rainfall sums')]
     gdf['Rainfall Totals'] = rainfall_totals
-    # store in csv
-    if '.csv' not in cmd_args.csv_name: cmd_args.csv_name += '.csv'
-    gdf.to_csv(cmd_args.csv_name, index=False)
     # print out needed calculation stats
     station_lengths = [len(lst) for lst in station_indices]     # how many stations were captured
     _, columns = os.popen('stty size', 'r').read().split()
@@ -92,7 +89,18 @@ def main():
     if 0 in station_lengths:                                    # warn if any location didn't capture data
         cprint('WARNING:', 'red', attrs=['reverse', 'blink'])
         print(f'{station_lengths.count(0)}/{len(station_lengths)} locations did not capture a single precip station.\n\n')
-    else: print('Every location captured at least one precip station.\n\n')
+    else: print('Every location captured at least one precip station.')
+
+    return gdf
+
+def main():
+    # get command line arguments
+    cmd_args = commandLineParser()
+    # call functionality
+    gdf = body(cmd_args)
+    # store in csv
+    if '.csv' not in cmd_args.csv_name: cmd_args.csv_name += '.csv'
+    gdf.to_csv(cmd_args.csv_name, index=False)
 
 if __name__ == '__main__':
     main()

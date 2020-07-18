@@ -31,13 +31,8 @@ def locationProcessing(percentile_list, rainfall_list):
         total_values.append(values)
     return total_values
 
-def dfProcessing(df, cmd_args):
-    # get the lists out of the df
-    percentile = df['Rainfall Percentiles'].tolist()
-    percentile = [item.strip('][').split(', ') for item in percentile]
-    rain_total = df['Rainfall Totals'].tolist()
-    rain_total = [item.strip('][').split(', ') for item in rain_total]
-    data_list = [locationProcessing(per, rain) for per, rain in zip(percentile, rain_total)]
+def dfProcessing(rain_list, percentile_list, cmd_args):
+    data_list = [locationProcessing(per, rain) for per, rain in zip(percentile_list, rain_list)]
     # change unhelpful index numbers into helpful DHSCLUST -- year
     for location in data_list:
         for year in location:
@@ -62,13 +57,24 @@ def commandLineParser():
 
     return args
 
+def body(rain_list, percentile_list, cmd_args):
+    # process data
+    data = dfProcessing(rain_list, percentile_list, cmd_args)
+    df = pd.DataFrame(data=data, columns=['Location-Year', '<5%-ile', '<10%-ile', '<15%-ile', '%-ile', 'Total'])
+
+    return df
+
 def main():
     # import needed data
     cmd_args = commandLineParser()
     input_df = pd.read_csv(cmd_args.file_path)
-    # process data
-    data = dfProcessing(input_df, cmd_args)
-    df = pd.DataFrame(data=data, columns=['Location-Year', '<5%-ile', '<10%-ile', '<15%-ile', '%-ile', 'Total'])
+    # get the lists out of the df
+    percentile_list = input_df['Rainfall Percentiles'].tolist()
+    percentile_list = [item.strip('][').split(', ') for item in percentile_list]
+    rain_list = input_df['Rainfall Totals'].tolist()
+    rain_list = [item.strip('][').split(', ') for item in rain_list]
+    # process
+    df = body(rain_list, percentile_list, cmd_args)
     # export to csv
     df.to_csv(cmd_args.output_file, index=False)
 
