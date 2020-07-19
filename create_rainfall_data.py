@@ -16,15 +16,14 @@ def commandLineParser():
         argparse.namespace: an argparse namespace representing the command line arguments
     '''
     parser = argparse.ArgumentParser()
-    parser.add_argument('unit_code', type=int, help='the unit code that designates the area of interest. See ./resources/unit_name.txt for list of unit codes.')
-    parser.add_argument('len_years', type=int, help='the number of years to use to fit each gamma distribution.')
-    parser.add_argument('--csv_name', '-n', type=str, default='data.csv', help='the name of the csv to which this program will write. Defaults to data.csv')
-    parser.add_argument('--testing', '-t', action='store_true', help='enter testing mode. All functions will be passed testing=True where possible.')
-    parser.add_argument('--station_dist', '-d', type=float, default=10., help='the maximum distance (in km) allowed between a DHS center and a precip grid center. Defaults to 10.0 km.')
+    parser.add_argument('--unit_code', required=True, type=int, help='the unit code that designates the area of interest. See ./resources/unit_name.txt for list of unit codes.')
+    parser.add_argument('--distance', required=True, type=float, default=10., help='the maximum distance (in km) allowed between a DHS center and a precip grid center.')
+    parser.add_argument('--shapefile_path', required=True, type=str, help='the path to the .shp file in a shapefile folder. This folder should be expanded from a .zip file.')
+    parser.add_argument('--len_years', required=True, type=int, help='the number of years to use to fit each gamma distribution.')
+    parser.add_argument('--output_file', type=str, default='cleanGamma_data.csv', help='the name of the processed csv. Defaults to cleanGamma_data.csv')
     parser.add_argument('--windows', '-w', type=str, help='the file path for the list of the names of precip files.')
     parser.add_argument('--verbose', '-v', action='store_true', help='whether or not to see the intermediate progress bar')
-    parser.add_argument('--first_year', type=int, default=1980, help='the year corresponding to the first value of the precipitation percentile. Output by gamma_calculations.py. Defaults to 1980')
-    parser.add_argument('--output_file', type=str, default='cleanGamma_data.csv', help='the name of the processed csv. Defaults to cleanGamma_data.csv')
+    parser.add_argument('--testing', '-t', action='store_true', help='enter testing mode. All functions will be passed testing=True where possible.')
     parser.add_argument('--determine_distance', default=False, help='needed for file_parsers. DO NOT TOUCH.')
     args = parser.parse_args()
 
@@ -43,8 +42,9 @@ def main():
     rainfall_list = gdf['Rainfall Totals'].tolist()
     percentiles = gamma_calculations.body(rainfall_list, cmd_args)
     # edit csv
-    df = csv_polishing.body(rainfall_list, percentiles, cmd_args)
-    df.to_csv('end.csv', index=False)
+    year = 1950 + cmd_args.len_years
+    df = csv_polishing.body(rainfall_list, percentiles, year)
+    df.to_csv(cmd_args.output_file, index=False)
 
 
     

@@ -31,12 +31,12 @@ def locationProcessing(percentile_list, rainfall_list):
         total_values.append(values)
     return total_values
 
-def dfProcessing(rain_list, percentile_list, cmd_args):
+def dfProcessing(rain_list, percentile_list, first_year):
     data_list = [locationProcessing(per, rain) for per, rain in zip(percentile_list, rain_list)]
     # change unhelpful index numbers into helpful DHSCLUST -- year
     for location in data_list:
         for year in location:
-            year[0] = str(float(data_list.index(location)) + 1) + ' - ' + str(year[0] + cmd_args.first_year)
+            year[0] = str(float(data_list.index(location)) + 1) + ' - ' + str(year[0] + first_year)
     # create numpy array
     shape = (len(data_list[0])*len(data_list))
     data_array = np.array(data_list).reshape(shape, 6)
@@ -57,9 +57,9 @@ def commandLineParser():
 
     return args
 
-def body(rain_list, percentile_list, cmd_args):
+def body(rain_list, percentile_list, year):
     # process data
-    data = dfProcessing(rain_list, percentile_list, cmd_args)
+    data = dfProcessing(rain_list, percentile_list, year)
     df = pd.DataFrame(data=data, columns=['Location-Year', '<5%-ile', '<10%-ile', '<15%-ile', '%-ile', 'Total'])
 
     return df
@@ -74,7 +74,7 @@ def main():
     rain_list = input_df['Rainfall Totals'].tolist()
     rain_list = [item.strip('][').split(', ') for item in rain_list]
     # process
-    df = body(rain_list, percentile_list, cmd_args)
+    df = body(rain_list, percentile_list, cmd_args.first_year)
     # export to csv
     df.to_csv(cmd_args.output_file, index=False)
 

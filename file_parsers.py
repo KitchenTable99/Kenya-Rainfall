@@ -5,9 +5,9 @@
 
 import re
 import time
-from haversine import haversine
 import itertools
 import geopandas as gpd
+from haversine import haversine
 from tqdm import tqdm as progress
 
 def timeIt(f):

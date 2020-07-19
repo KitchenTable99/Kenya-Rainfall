@@ -47,7 +47,7 @@ def commandLineParser():
     parser.add_argument('--unit_code', required=True, type=int, help='the unit code that designates the area of interest. See ./resources/unit_name.txt for list of unit codes.')
     parser.add_argument('--distance', required=True, type=float, default=10., help='the maximum distance (in km) allowed between a DHS center and a precip grid center. Defaults to 10.0 km.')
     parser.add_argument('--shapefile_path', required=True, type=str, help='the path to the .shp file in a shapefile folder. This folder should be expanded from a .zip file.')
-    parser.add_argument('--csv_name', '-n', type=str, default='data.csv', help='the name of the csv to which this program will write. Defaults to data.csv')
+    parser.add_argument('--csv_name', type=str, default='data.csv', help='the name of the csv to which this program will write. Defaults to data.csv')
     parser.add_argument('--testing', action='store_true', help='enter testing mode. All functions will be passed testing=True where possible.')
     parser.add_argument('--windows', '-w', type=str, help='the file path for the list of the names of precip files.')
     parser.add_argument('--determine_distance', default=False, help='needed for file_parsers. DO NOT TOUCH.')
@@ -69,6 +69,14 @@ def generateRainFallSums(index_list, precip_data):
     return rainfall_totals
 
 def body(cmd_args):
+    '''This function runs the main functionality
+    
+    Args:
+        cmd_args (argparse.Namespace): an argparse namespace
+    
+    Returns:
+        GeoDataFrame: a GeoPandas GeoDataFrame with all of the rainfall sums included.
+    '''
     # parse month range
     month_range = fp.cropCalendarParser(cmd_args.unit_code)
     month_range = [int(month) for month in month_range]
@@ -89,7 +97,7 @@ def body(cmd_args):
     print(f'The average number of captured stations was {round(statistics.mean(station_lengths), 2)}')
     if 0 in station_lengths:                                    # warn if any location didn't capture data
         cprint('WARNING:', 'red', attrs=['reverse', 'blink'])
-        print(f'{station_lengths.count(0)}/{len(station_lengths)} locations did not capture a single precip station.\n\n')
+        print(f'{station_lengths.count(0)}/{len(station_lengths)} locations did not capture a single precip station.')
     else: print('Every location captured at least one precip station.')
 
     return gdf
