@@ -50,6 +50,7 @@ def commandLineParser():
     parser.add_argument('--csv_name', '-n', type=str, default='data.csv', help='the name of the csv to which this program will write. Defaults to data.csv')
     parser.add_argument('--testing', action='store_true', help='enter testing mode. All functions will be passed testing=True where possible.')
     parser.add_argument('--windows', '-w', type=str, help='the file path for the list of the names of precip files.')
+    parser.add_argument('--determine_distance', default=False, help='needed for file_parsers. DO NOT TOUCH.')
     args = parser.parse_args()
 
     return args

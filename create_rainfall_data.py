@@ -25,6 +25,7 @@ def commandLineParser():
     parser.add_argument('--verbose', '-v', action='store_true', help='whether or not to see the intermediate progress bar')
     parser.add_argument('--first_year', type=int, default=1980, help='the year corresponding to the first value of the precipitation percentile. Output by gamma_calculations.py. Defaults to 1980')
     parser.add_argument('--output_file', type=str, default='cleanGamma_data.csv', help='the name of the processed csv. Defaults to cleanGamma_data.csv')
+    parser.add_argument('--determine_distance', default=False, help='needed for file_parsers. DO NOT TOUCH.')
     args = parser.parse_args()
 
     return args
