@@ -3,6 +3,7 @@
 # Written for research for Professor Daniel LaFave at Colby College
 #
 
+import math
 import argparse
 import statistics
 import pandas as pd
@@ -43,7 +44,8 @@ def main():
     print(f'Mean: {round(statistics.mean(minimum_distances), 2)}')
     print(f'Max: {round(max(minimum_distances), 2)}')
     # histogram output
-    plt.hist(minimum_distances, bins=len(minimum_distances))
+    bin_num = int(1 + 3.322*math.log10(len(minimum_distances)))
+    plt.hist(minimum_distances, bins=bin_num)
     plt.show()
 
 if __name__ == '__main__':

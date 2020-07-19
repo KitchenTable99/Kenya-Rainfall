@@ -96,7 +96,7 @@ def body(cmd_args):
     print(''.join(fancy_sep))                                   # allow for some eyeball breathing room
     print(f'The average number of captured stations was {round(statistics.mean(station_lengths), 2)}')
     if 0 in station_lengths:                                    # warn if any location didn't capture data
-        cprint('WARNING:', 'red', attrs=['reverse', 'blink'])
+        cprint('::WARNING::', 'red', attrs=['reverse', 'blink'])
         print(f'{station_lengths.count(0)}/{len(station_lengths)} locations did not capture a single precip station.')
     else: print('Every location captured at least one precip station.')
 

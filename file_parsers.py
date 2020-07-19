@@ -73,7 +73,7 @@ def shapeFileParser(file_path, station_coords, cmd_args, testing=False):
     gdf = gpd.read_file(file_path)
     # only take the first ten rows if testing (for speed)
     if testing:
-        gdf = gdf.iloc[:10]
+        gdf = gdf.iloc[:100]
     # create a list of shapely.geometry.Point objects for distance comparison
     latlong_coord_tuples = [(coord_list[1], coord_list[0]) for coord_list in station_coords]
     # find the distance between center coord and every station (print out progress bar)
