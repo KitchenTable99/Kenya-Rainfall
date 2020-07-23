@@ -5,6 +5,9 @@
 
 import os
 import argparse
+import itertools
+import numpy as np
+import pandas as pd
 import csv_polishing
 import rainfall_sums
 import gamma_calculations
@@ -44,6 +47,13 @@ def main():
     # edit csv
     year = 1950 + cmd_args.len_years
     df = csv_polishing.body(rainfall_list, percentiles, year)
+    # prepend DHSCC and DHSYEAR
+    num_rows = len(df.index)
+    dhscc = gdf['DHSCC'][0]
+    dhsyear = int(gdf['DHSYEAR'][0])
+    temp_data = np.array(list(itertools.repeat([dhscc, dhsyear], num_rows)))
+    prepend_data = pd.DataFrame(data=temp_data, columns=['DHSCC', 'DHSYEAR'])
+    df = pd.concat([prepend_data, df], axis=1)
     df.to_csv(cmd_args.output_file, index=False)
 
 

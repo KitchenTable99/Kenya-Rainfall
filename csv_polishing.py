@@ -4,6 +4,7 @@
 #
 
 import argparse
+import itertools
 import numpy as np
 import pandas as pd
 
@@ -77,6 +78,13 @@ def main():
     rain_list = [item.strip('][').split(', ') for item in rain_list]
     # process
     df = body(rain_list, percentile_list, cmd_args.first_year)
+    # prepend the dhscc and the dhsyear to the dataframe
+    num_rows = len(df.index)
+    dhscc = input_df['DHSCC'][0]
+    dhsyear = int(input_df['DHSYEAR'][0])
+    temp_data = np.array(list(itertools.repeat([dhscc, dhsyear], num_rows)))
+    prepend_data = pd.DataFrame(data=temp_data, columns=['DHSCC', 'DHSYEAR'])
+    df = pd.concat([prepend_data, df], axis=1)
     # export to csv
     df.to_csv(cmd_args.output_file, index=False)
 
