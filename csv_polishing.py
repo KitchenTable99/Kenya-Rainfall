@@ -36,10 +36,12 @@ def dfProcessing(rain_list, percentile_list, first_year):
     # change unhelpful index numbers into helpful DHSCLUST -- year
     for location in data_list:
         for year in location:
-            year[0] = str(float(data_list.index(location)) + 1) + ' - ' + str(year[0] + first_year)
+            tempyr = year[0] + first_year
+            year[0] = str(float(data_list.index(location)) + 1)
+            year.insert(1, str(tempyr))
     # create numpy array
     shape = (len(data_list[0])*len(data_list))
-    data_array = np.array(data_list).reshape(shape, 6)
+    data_array = np.array(data_list).reshape(shape, 7)
     
     return data_array
 
@@ -60,7 +62,7 @@ def commandLineParser():
 def body(rain_list, percentile_list, year):
     # process data
     data = dfProcessing(rain_list, percentile_list, year)
-    df = pd.DataFrame(data=data, columns=['Location-Year', '<5%-ile', '<10%-ile', '<15%-ile', '%-ile', 'Total'])
+    df = pd.DataFrame(data=data, columns=['Location', 'Year', '<5%-ile', '<10%-ile', '<15%-ile', '%-ile', 'Total'])
 
     return df
 
