@@ -3,12 +3,16 @@
 # Written for research for Professor Daniel LaFave at Colby College
 #
 
+import os
 import math
 import argparse
 import statistics
+import numpy as np
 import pandas as pd
 import file_parsers as fp
+import csv_polishing as cp
 import matplotlib.pyplot as plt
+from matplotlib.ticker import PercentFormatter
 
 def commandLineParser():
     '''This function parses the command line arguments
@@ -30,7 +34,12 @@ def main():
     cmd_args = commandLineParser()
     # bring in station distances
     st_coords = fp.precipFileParser('./resources/precip_data/precip.1977', [4, 8], return_coords=True)
-    distances_list = fp.shapeFileParser(cmd_args.shapefile_path, st_coords, cmd_args, testing=cmd_args.testing)
+    raw_distances_list = fp.shapeFileParser(cmd_args.shapefile_path, st_coords, cmd_args, testing=cmd_args.testing)
+    # drop the ones at the origin
+    clust_nums = cp.interpretOriginLog('origin_log.csv')
+    os.system('rm origin_log.csv')
+    clust_indices = [clust_num - 1 for clust_num in clust_nums]
+    distances_list = [raw_dist for index, raw_dist in enumerate(raw_distances_list) if index not in clust_indices]
     # sort each location
     for lst in distances_list: lst.sort()
     # create a list of the distance to have cmd_args.num_stations captured
@@ -45,7 +54,11 @@ def main():
     print(f'Max: {round(max(minimum_distances), 2)}')
     # histogram output
     bin_num = int(1 + 3.322*math.log10(len(minimum_distances)))
-    plt.hist(minimum_distances, bins=bin_num)
+    plt.hist(minimum_distances, weights=np.ones(len(minimum_distances)) / len(minimum_distances), bins=bin_num)
+    plt.xlabel('Distance Value')
+    plt.title('Determine Distance')
+    plt.ylabel('Percentage of total DHS Clusters')
+    plt.gca().yaxis.set_major_formatter(PercentFormatter(1))
     plt.show()
 
 if __name__ == '__main__':
