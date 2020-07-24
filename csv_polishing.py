@@ -117,8 +117,8 @@ def body(rain_list, percentile_list, year):
     # process data
     data = dfProcessing(rain_list, percentile_list, year)
     df = pd.DataFrame(data=data, columns=['Location', 'Year', '<5%-ile', '<10%-ile', '<15%-ile', '%-ile', 'Total Rainfall (mm)'])
-    # df = dropOrigin(df)
-    # logInterpreter()
+    df = dropOrigin(df)
+    logInterpreter()
 
     return df
 
