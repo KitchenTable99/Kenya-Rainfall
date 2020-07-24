@@ -24,12 +24,12 @@ def locationProcessing(percentile_list, rainfall_list):
         values = []
         values.append(percentile_list.index(pyear))
         pyear = float(pyear)
-        ryear = float(ryear)/1000
+        ryear = rainfall_list[rainfall_list.index(ryear) + 30]
         values.append(pyear < .05)      # 5%-ile
         values.append(pyear < .10)      # 10%-ile
         values.append(pyear < .15)      # 15%-ile
-        values.append(round(pyear,2))   # actual %-ile
-        values.append(round(ryear, 2))  # rainfall (m)          CHANGE THIS
+        values.append(round(pyear,4))   # actual %-ile
+        values.append(round(float(ryear), 4))  # rainfall (mm)          CHANGE THIS
         total_values.append(values)
     return total_values
 
@@ -116,9 +116,9 @@ def dropOrigin(df, file_path='origin_log.csv'):
 def body(rain_list, percentile_list, year):
     # process data
     data = dfProcessing(rain_list, percentile_list, year)
-    df = pd.DataFrame(data=data, columns=['Location', 'Year', '<5%-ile', '<10%-ile', '<15%-ile', '%-ile', 'Total'])
-    df = dropOrigin(df)
-    logInterpreter()
+    df = pd.DataFrame(data=data, columns=['Location', 'Year', '<5%-ile', '<10%-ile', '<15%-ile', '%-ile', 'Total Rainfall (mm)'])
+    # df = dropOrigin(df)
+    # logInterpreter()
 
     return df
 
