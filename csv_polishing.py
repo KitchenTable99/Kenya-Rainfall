@@ -80,6 +80,24 @@ def logInterpreter(file_path='origin_log.csv'):
         fp.write(out_str)
     os.system(f'rm {file_path}')
 
+def interpretOriginLog(file_path):
+    '''Get the clusters to drop
+    
+    Args:
+        file_path (str): file path representing origin_log
+    
+    Returns:
+        list: a list of integers of the cluster numbers to drop
+    '''
+    # get clusters to drop
+    with open(file_path, 'r') as f:
+        contents = f.read()
+    list_contents = contents.split('\n')
+    list_contents.pop()
+    int_contents = [int(item) + 1 for item in list_contents]
+
+    return int_contents
+
 def dropOrigin(df, file_path='origin_log.csv'):
     '''This drops any point that was at the origin
     
@@ -90,12 +108,7 @@ def dropOrigin(df, file_path='origin_log.csv'):
     Returns:
         pd.DataFrame: the same dataframe that was the input with the necessary columns dropped
     '''
-    # get clusters to drop
-    with open(file_path, 'r') as f:
-        contents = f.read()
-    list_contents = contents.split('\n')
-    list_contents.pop()
-    int_contents = [int(item) + 1 for item in list_contents]
+    int_contents = interpretOriginLog(file_path)
     # determine corresponding indicies
     # num rows per clust
     df_length = len(df.index)
