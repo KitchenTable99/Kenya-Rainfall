@@ -3,6 +3,7 @@
 # Written for research for Professor Daniel LaFave at Colby College
 #
 
+import os
 import re
 import time
 import itertools
@@ -22,8 +23,8 @@ def timeIt(f):
         return output
 
     return wrapper
-
-def pointDist(point1, pointlist):
+    
+def pointDist(point1, pointlist, index):
     '''This function calculates the distance between one point and a list of others
     
     Args:
@@ -31,10 +32,14 @@ def pointDist(point1, pointlist):
         pointlist (list): a list of shapely.geometry.Point objecsts against which the distances are calculated
     
     Returns:
-        list: a list of distances between the two points as if they were in meters THIS FUNCTION WILL LIKELY NEED TO BE REWIRTTEN ONCE PROJECTIONS ARE UNDERSTOOD
+        list: a list of distances between the two points as if they were in meters
     '''
     latitude = point1.y
     longitude = point1.x
+    # filter out the origin points
+    if latitude == 0 and longitude == 0:
+        with open('origin_log.csv', 'a') as f:
+            f.write(str(index)+'\n')
     distances = [haversine((latitude, longitude), point2) for point2 in pointlist]       # uses methods built into shapely.geometry
     return distances
 
@@ -77,7 +82,7 @@ def shapeFileParser(file_path, station_coords, cmd_args, testing=False):
     # create a list of shapely.geometry.Point objects for distance comparison
     latlong_coord_tuples = [(coord_list[1], coord_list[0]) for coord_list in station_coords]
     # find the distance between center coord and every station (print out progress bar)
-    alldist = [pointDist(geom, lst) for geom, lst in progress(zip(gdf['geometry'], itertools.repeat(latlong_coord_tuples)), total=len(gdf['geometry']), desc='Importing shapefile')]
+    alldist = [pointDist(geom, lst, index) for index, (geom, lst) in progress(enumerate(zip(gdf['geometry'], itertools.repeat(latlong_coord_tuples))), total=len(gdf['geometry']), desc='Importing shapefile')]
     if cmd_args.determine_distance: return alldist
     # create a new column and assign it the relevant station indices
     monitor_stations = [[index for index, dist in enumerate(row) if dist <= cmd_args.distance] for row in alldist]

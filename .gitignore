@@ -6,3 +6,4 @@ data.csv
 gammaProcessed_data.csv
 .ipynb_checkpoints/
 distances.csv
+origin_log.txt

@@ -3,6 +3,7 @@
 # Written for research for Professor Daniel LaFave at Colby College
 #
 
+import os
 import argparse
 import itertools
 import numpy as np
@@ -60,10 +61,64 @@ def commandLineParser():
 
     return args
 
+def logInterpreter(file_path='origin_log.csv'):
+    '''This function turns the origin csv into something that makes sense
+    
+    Args:
+        file_path (str, optional): the file path containing the origin csv
+    '''
+    # get which clusters were dropped
+    with open(file_path, 'r') as f:
+        contents = f.read()
+    list_contents = contents.split('\n')
+    list_contents.pop()
+    clust_nums = [int(list_content) + 1 for list_content in list_contents]
+    # print it out and write it to a file
+    out_str = f'The clusters that had to be dropped were {clust_nums}.'
+    print(out_str + '\nThis is written in a file called origin_log.txt')
+    with open('origin_log.txt', 'w') as fp:
+        fp.write(out_str)
+    os.system(f'rm {file_path}')
+
+def dropOrigin(df, file_path='origin_log.csv'):
+    '''This drops any point that was at the origin
+    
+    Args:
+        df (pd.DataFrame): the dataframe containing the data
+        file_path (str, optional): the csv file with the indicies of the rows to drop
+    
+    Returns:
+        pd.DataFrame: the same dataframe that was the input with the necessary columns dropped
+    '''
+    # get clusters to drop
+    with open(file_path, 'r') as f:
+        contents = f.read()
+    list_contents = contents.split('\n')
+    list_contents.pop()
+    int_contents = [int(item) + 1 for item in list_contents]
+    # determine corresponding indicies
+    # num rows per clust
+    df_length = len(df.index)
+    num_clust = float(df['Location'][df_length - 1])
+    cols_per_clust = df_length/num_clust
+    # start and end points
+    start_points = [(num - 1) * cols_per_clust for num in int_contents]
+    end_points = [num*cols_per_clust for num in int_contents]           # purposefully one number over needed index due to exclusivity of range()
+    # create range lists
+    range_list = [list(range(int(p1), int(p2))) for p1, p2 in zip(start_points, end_points)]
+    flat_list = list(itertools.chain.from_iterable(range_list))
+    # drop columns and reindex
+    df.drop(flat_list, axis=0, inplace=True)
+    df.reset_index(drop=True, inplace=True)
+
+    return df
+
 def body(rain_list, percentile_list, year):
     # process data
     data = dfProcessing(rain_list, percentile_list, year)
     df = pd.DataFrame(data=data, columns=['Location', 'Year', '<5%-ile', '<10%-ile', '<15%-ile', '%-ile', 'Total'])
+    df = dropOrigin(df)
+    logInterpreter()
 
     return df
 
