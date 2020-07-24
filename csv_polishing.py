@@ -3,7 +3,9 @@
 # Written for research for Professor Daniel LaFave at Colby College
 #
 
+import os
 import argparse
+import itertools
 import numpy as np
 import pandas as pd
 
@@ -22,12 +24,12 @@ def locationProcessing(percentile_list, rainfall_list):
         values = []
         values.append(percentile_list.index(pyear))
         pyear = float(pyear)
-        ryear = float(ryear)/1000
+        ryear = rainfall_list[rainfall_list.index(ryear) + 30]
         values.append(pyear < .05)      # 5%-ile
         values.append(pyear < .10)      # 10%-ile
         values.append(pyear < .15)      # 15%-ile
-        values.append(round(pyear,2))   # actual %-ile
-        values.append(round(ryear, 2))  # rainfall (m)          CHANGE THIS
+        values.append(round(pyear,4))   # actual %-ile
+        values.append(round(float(ryear), 4))  # rainfall (mm)          CHANGE THIS
         total_values.append(values)
     return total_values
 
@@ -36,10 +38,12 @@ def dfProcessing(rain_list, percentile_list, first_year):
     # change unhelpful index numbers into helpful DHSCLUST -- year
     for location in data_list:
         for year in location:
-            year[0] = str(float(data_list.index(location)) + 1) + ' - ' + str(year[0] + first_year)
+            tempyr = year[0] + first_year
+            year[0] = str(float(data_list.index(location)) + 1)
+            year.insert(1, str(tempyr))
     # create numpy array
     shape = (len(data_list[0])*len(data_list))
-    data_array = np.array(data_list).reshape(shape, 6)
+    data_array = np.array(data_list).reshape(shape, 7)
     
     return data_array
 
@@ -57,10 +61,64 @@ def commandLineParser():
 
     return args
 
+def logInterpreter(file_path='origin_log.csv'):
+    '''This function turns the origin csv into something that makes sense
+    
+    Args:
+        file_path (str, optional): the file path containing the origin csv
+    '''
+    # get which clusters were dropped
+    with open(file_path, 'r') as f:
+        contents = f.read()
+    list_contents = contents.split('\n')
+    list_contents.pop()
+    clust_nums = [int(list_content) + 1 for list_content in list_contents]
+    # print it out and write it to a file
+    out_str = f'The clusters that had to be dropped were {clust_nums}.'
+    print(out_str + '\nThis is written in a file called origin_log.txt')
+    with open('origin_log.txt', 'w') as fp:
+        fp.write(out_str)
+    os.system(f'rm {file_path}')
+
+def dropOrigin(df, file_path='origin_log.csv'):
+    '''This drops any point that was at the origin
+    
+    Args:
+        df (pd.DataFrame): the dataframe containing the data
+        file_path (str, optional): the csv file with the indicies of the rows to drop
+    
+    Returns:
+        pd.DataFrame: the same dataframe that was the input with the necessary columns dropped
+    '''
+    # get clusters to drop
+    with open(file_path, 'r') as f:
+        contents = f.read()
+    list_contents = contents.split('\n')
+    list_contents.pop()
+    int_contents = [int(item) + 1 for item in list_contents]
+    # determine corresponding indicies
+    # num rows per clust
+    df_length = len(df.index)
+    num_clust = float(df['Location'][df_length - 1])
+    cols_per_clust = df_length/num_clust
+    # start and end points
+    start_points = [(num - 1) * cols_per_clust for num in int_contents]
+    end_points = [num*cols_per_clust for num in int_contents]           # purposefully one number over needed index due to exclusivity of range()
+    # create range lists
+    range_list = [list(range(int(p1), int(p2))) for p1, p2 in zip(start_points, end_points)]
+    flat_list = list(itertools.chain.from_iterable(range_list))
+    # drop columns and reindex
+    df.drop(flat_list, axis=0, inplace=True)
+    df.reset_index(drop=True, inplace=True)
+
+    return df
+
 def body(rain_list, percentile_list, year):
     # process data
     data = dfProcessing(rain_list, percentile_list, year)
-    df = pd.DataFrame(data=data, columns=['Location-Year', '<5%-ile', '<10%-ile', '<15%-ile', '%-ile', 'Total'])
+    df = pd.DataFrame(data=data, columns=['Location', 'Year', '<5%-ile', '<10%-ile', '<15%-ile', '%-ile', 'Total Rainfall (mm)'])
+    df = dropOrigin(df)
+    logInterpreter()
 
     return df
 
@@ -75,6 +133,13 @@ def main():
     rain_list = [item.strip('][').split(', ') for item in rain_list]
     # process
     df = body(rain_list, percentile_list, cmd_args.first_year)
+    # prepend the dhscc and the dhsyear to the dataframe
+    num_rows = len(df.index)
+    dhscc = input_df['DHSCC'][0]
+    dhsyear = int(input_df['DHSYEAR'][0])
+    temp_data = np.array(list(itertools.repeat([dhscc, dhsyear], num_rows)))
+    prepend_data = pd.DataFrame(data=temp_data, columns=['DHSCC', 'DHSYEAR'])
+    df = pd.concat([prepend_data, df], axis=1)
     # export to csv
     df.to_csv(cmd_args.output_file, index=False)
 

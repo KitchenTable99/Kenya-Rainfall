@@ -20,7 +20,7 @@ def percentile(data_list):
         TYPE: DESCRIPTION
     '''
     target_value = data_list.pop()  # take the target value out of the data list
-    fit_alpha, fit_loc, fit_beta=stats.gamma.fit(data_list)
+    fit_alpha, fit_loc, fit_beta=stats.gamma.fit(data_list, loc=0)
 
     return stats.gamma.cdf(target_value, fit_alpha, loc=fit_loc, scale=fit_beta)
 
@@ -59,6 +59,7 @@ def commandLineParser():
     parser.add_argument('file_path', type=str, help='the path to the csv file containing the output of sum_rainfall.py')
     parser.add_argument('len_years', type=int, help='the number of years to use to fit each gamma distribution.')
     parser.add_argument('--verbose', '-v', action='store_true', help='whether or not to see the intermediate progress bar')
+    parser.add_argument('--testing', '-t', action='store_true', help='whether or not to see the intermediate progress bar')
     args = parser.parse_args()
 
     return args
@@ -84,7 +85,11 @@ def main():
     # turn the strings into lists
     rainfall_sums = [json.loads(rainfall_sum) for rainfall_sum in rainfall_sums]
     # get data into dataframe
-    percentiles = body(rainfall_sums, cmd_args)
+    if cmd_args.testing:
+        percentiles = body(rainfall_sums[:3], cmd_args)
+        df = df.truncate(before=0, after=2)
+    else:
+        percentiles = body(rainfall_sums, cmd_args)
     df['Rainfall Percentiles'] = percentiles
     # write out
     write_path = 'gammaProcessed_' + cmd_args.file_path
