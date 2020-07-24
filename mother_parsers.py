@@ -3,6 +3,8 @@
 # Written for research for Professor Daniel LaFave at Colby College
 #
 
+import itertools
+import numpy as np
 import pandas as pd
 
 class Mother():
@@ -18,6 +20,14 @@ class Mother():
         self.collected_range = list(range(self.birth_year + 15, Mother.collection_year + 1))
         self.mother_age = [dyear - self.birth_year for dyear in self.collected_range]
         self.gave_birth = self.df_subset['kidbirthyr'].tolist()
+
+    def genDataArray(self):
+        final_length = len(self.collected_range)
+        clust = list(itertools.repeat(self.dhs_clust, final_length))
+        id_num = list(itertools.repeat(self.id_num, final_length))
+        kids = [True if year in self.gave_birth else False for year in self.collected_range]
+        data = np.array([clust, id_num, self.collected_range, self.mother_age, kids]).T
+        print(data)
 
     def __repr__(self):
         return f'Mother({self.id_num})'
@@ -37,6 +47,7 @@ def main():
     input_df = pd.read_csv('./resources/ken_dhs14_raw.csv')
     Mother.master_df = input_df
     tester = Mother('0001006 02')
+    tester.genDataArray()
 
 if __name__ == '__main__':
     main()
