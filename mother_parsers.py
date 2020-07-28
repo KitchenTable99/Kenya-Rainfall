@@ -41,6 +41,11 @@ class Mother():
         return data
 
     def genHazardArray(self):
+        '''Generate an array containing all the information pertaining to this mother.
+        
+        Returns:
+            np.array: Mother ID, event_time, event_occurred, dhsid, event_year. Shape is 1 by 5
+        '''
         # get the event time and censorship status
         try:
             event_index = self.kids.index(True)
@@ -85,16 +90,15 @@ def commandLineParser():
 
     return args
 
-def test():
-    # get command-line arguments
-    cmd_args = commandLineParser()
-    # assign Class variable to the correct DataFrame
-    input_df = pd.read_csv(cmd_args.input_csv)
-    survey_year = input_df['year'].iloc[0]
-    Mother.collection_year = survey_year
-    Mother.master_df = input_df
-
 def getHazardDataFrame(df):
+    '''Get hazard data
+    
+    Args:
+        df (Pandas DataFrame): the dataframe containing survey data
+    
+    Returns:
+        DataFrame: processed DataFrame. Almost ready to use with lifelines.
+    '''
     survey_year = df['year'].iloc[0]
     Mother.collection_year = survey_year
     Mother.master_df = df
