@@ -94,28 +94,42 @@ def test():
     Mother.collection_year = survey_year
     Mother.master_df = input_df
 
+def getHazardDataFrame(df):
+    survey_year = df['year'].iloc[0]
+    Mother.collection_year = survey_year
+    Mother.master_df = df
+    # make a list of all unique mother id
+    id_num_list = df['idhspid'].tolist()
+    id_num_list = list(dict.fromkeys(id_num_list))
+    # create a Mother object for each id
+    mother_list = [Mother(num) for num in progress(id_num_list, desc='Creating mother objects')]
+    # create an array containing all relevant data
+    mother_arrays = [mother.genHazardArray() for mother in mother_list]
+    data = np.column_stack(mother_arrays).T
+    out_df = pd.DataFrame(data=data, columns=['IDHSPID', 'Event Time', 'Event Occured', 'DHSID', 'Rainfall Data Year'])
+    
+    return out_df
+
 def main():
     # get command-line arguments
     cmd_args = commandLineParser()
     # assign Class variable to the correct DataFrame
     input_df = pd.read_csv(cmd_args.input_csv)
-    survey_year = input_df['year'].iloc[0]
-    Mother.collection_year = survey_year
-    Mother.master_df = input_df
-    # make a list of all unique mother id
-    id_num_list = input_df['idhspid'].tolist()
-    id_num_list = list(dict.fromkeys(id_num_list))
-    # create a Mother object for each id
-    mother_list = [Mother(num) for num in progress(id_num_list, desc='Creating mother objects')]
-    # create an array containing all relevant data
-    if not cmd_args.hazard_regressions:
+    if cmd_args.hazard_regressions:
+        df = getHazardDataFrame(input_df)
+    else:
+        survey_year = input_df['year'].iloc[0]
+        Mother.collection_year = survey_year
+        Mother.master_df = input_df
+        # make a list of all unique mother id
+        id_num_list = input_df['idhspid'].tolist()
+        id_num_list = list(dict.fromkeys(id_num_list))
+        # create a Mother object for each id
+        mother_list = [Mother(num) for num in progress(id_num_list, desc='Creating mother objects')]
+        # create an array containing all relevant data
         mother_arrays = [mother.genDataArray() for mother in mother_list]
         data = np.concatenate(mother_arrays)
         df = pd.DataFrame(data=data, columns=['DHSID', 'IDHSPID', 'Year', 'Mother\'s Age', 'Baby?'])
-    else:
-        mother_arrays = [mother.genHazardArray() for mother in mother_list]
-        data = np.column_stack(mother_arrays).T
-        df = pd.DataFrame(data=data, columns=['IDHSPID', 'Event Time', 'Event Occured', 'DHSID', 'Rainfall Data Year'])
     # make a new DataFrame and export as csv
     df.to_csv(cmd_args.output_csv, index=False)
 
