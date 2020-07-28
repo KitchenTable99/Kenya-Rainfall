@@ -110,7 +110,7 @@ def getHazardDataFrame(df):
     # create an array containing all relevant data
     mother_arrays = [mother.genHazardArray() for mother in mother_list]
     data = np.column_stack(mother_arrays).T
-    out_df = pd.DataFrame(data=data, columns=['IDHSPID', 'Event Time', 'Event Occured', 'DHSID', 'Rainfall Data Year'])
+    out_df = pd.DataFrame(data=data, columns=['IDHSPID', 'Event Time', 'Event Occured', 'DHSID', 'Year'])
     
     return out_df
 

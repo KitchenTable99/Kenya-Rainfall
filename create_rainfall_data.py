@@ -47,17 +47,13 @@ def main():
     # edit csv
     year = 1950 + cmd_args.len_years
     df = csv_polishing.body(rainfall_list, percentiles, year)
-    # prepend DHSCC and DHSYEAR
-    num_rows = len(df.index)
-    dhscc = gdf['DHSCC'][0]
-    dhsyear = int(gdf['DHSYEAR'][0])
-    temp_data = np.array(list(itertools.repeat([dhscc, dhsyear], num_rows)))
-    prepend_data = pd.DataFrame(data=temp_data, columns=['DHSCC', 'DHSYEAR'])
-    df = pd.concat([prepend_data, df], axis=1)
+    # get DHSID
+    DHSID_col = gdf['DHSID'].repeat(len(percentiles[0]))
+    DHSID_col = DHSID_col.reset_index(drop=True)
+    df.insert(0, 'DHSID', DHSID_col, allow_duplicates=True)
+    df.drop('Location', axis=1, inplace=True)
+    # output
     df.to_csv(cmd_args.output_file, index=False)
-
-
-    
 
 if __name__ == '__main__':
     main()
