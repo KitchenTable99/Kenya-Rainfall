@@ -5,7 +5,7 @@
 
 import argparse
 import pandas as pd
-import mother_parsers as mp
+from lifelines import CoxPHFitter
 
 def commandLineParser():
     '''This function parses the command line arguments
@@ -26,7 +26,6 @@ def main():
     # import data (mother/rain)
     rainfall_df = pd.read_csv(cmd_args.rainfall_data)
     mother_df = pd.read_csv(cmd_args.DHS_data)
-    # mother_df = mp.getHazardDataFrame(mother_df)           UNCOMMENT BEFORE FINAL TESTS
     # get relevant data from rain data
     merged = pd.merge(mother_df, rainfall_df, on=['DHSID', 'Year'], how='left')
     merged.set_index('IDHSPID', inplace=True)
@@ -36,9 +35,13 @@ def main():
         if column in drop_columns:
             merged.drop(column, axis=1, inplace=True)
     # change Bools into ones or zeros
-    merged.to_csv('test.csv')
+    for column in [r'<5%-ile', r'<10%-ile', r'<15%-ile']:
+        merged[column] = (merged[column] == True).astype(int)
     # regressions
+    cph = CoxPHFitter()
+    cph.fit(merged, 'Event Time', event_col='Event Occured')
     # display results
+    cph.print_summary()
 
 if __name__ == '__main__':
     main()
