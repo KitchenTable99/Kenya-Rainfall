@@ -20,7 +20,7 @@ def percentile(data_list):
         TYPE: DESCRIPTION
     '''
     target_value = data_list.pop()  # take the target value out of the data list
-    fit_alpha, fit_loc, fit_beta=stats.gamma.fit(data_list, loc=0)
+    fit_alpha, fit_loc, fit_beta=stats.gamma.fit(data_list)
 
     return stats.gamma.cdf(target_value, fit_alpha, loc=fit_loc, scale=fit_beta)
 
