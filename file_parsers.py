@@ -6,6 +6,7 @@
 import os
 import re
 import time
+import pickle
 import itertools
 import geopandas as gpd
 from haversine import haversine
@@ -82,7 +83,11 @@ def shapeFileParser(file_path, station_coords, cmd_args, testing=False):
     # create a list of shapely.geometry.Point objects for distance comparison
     latlong_coord_tuples = [(coord_list[1], coord_list[0]) for coord_list in station_coords]
     # find the distance between center coord and every station (print out progress bar)
-    alldist = [pointDist(geom, lst, index) for index, (geom, lst) in progress(enumerate(zip(gdf['geometry'], itertools.repeat(latlong_coord_tuples))), total=len(gdf['geometry']), desc='Importing shapefile')]
+    try:
+        with open(cmd_args.pickle_path, 'rb') as f:
+            alldist = pickle.load(f)
+    except Exception:
+        alldist = [pointDist(geom, lst, index) for index, (geom, lst) in progress(enumerate(zip(gdf['geometry'], itertools.repeat(latlong_coord_tuples))), total=len(gdf['geometry']), desc='Importing shapefile')]
     if cmd_args.determine_distance: return alldist
     # create a new column and assign it the relevant station indices
     monitor_stations = [[index for index, dist in enumerate(row) if dist <= cmd_args.distance] for row in alldist]

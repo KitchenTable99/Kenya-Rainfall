@@ -9,7 +9,7 @@ import itertools
 import numpy as np
 import pandas as pd
 
-def locationProcessing(percentile_list, rainfall_list):
+def locationProcessing(percentile_list, rainfall_list, cmd_args):
     '''This function turns the rainfall totals and precipitation percentiles into the desired form.
     
     Args:
@@ -24,7 +24,7 @@ def locationProcessing(percentile_list, rainfall_list):
         values = []
         values.append(percentile_list.index(pyear))
         pyear = float(pyear)
-        ryear = rainfall_list[rainfall_list.index(ryear) + 30]
+        ryear = rainfall_list[rainfall_list.index(ryear) + cmd_args.len_years]
         values.append(pyear < .05)      # 5%-ile
         values.append(pyear < .10)      # 10%-ile
         values.append(pyear < .15)      # 15%-ile
@@ -33,8 +33,8 @@ def locationProcessing(percentile_list, rainfall_list):
         total_values.append(values)
     return total_values
 
-def dfProcessing(rain_list, percentile_list, first_year):
-    data_list = [locationProcessing(per, rain) for per, rain in zip(percentile_list, rain_list)]
+def dfProcessing(rain_list, percentile_list, first_year, cmd_args):
+    data_list = [locationProcessing(per, rain, cmd_args) for per, rain in zip(percentile_list, rain_list)]
     # change unhelpful index numbers into helpful DHSCLUST -- year
     for location in data_list:
         for year in location:
@@ -112,7 +112,7 @@ def dropOrigin(df, file_path='origin_log.csv'):
     # determine corresponding indicies
     # num rows per clust
     df_length = len(df.index)
-    num_clust = float(df['Location'][df_length - 1])
+    num_clust = float(df['Location'].iloc[df_length - 1])
     cols_per_clust = df_length/num_clust
     # start and end points
     start_points = [(num - 1) * cols_per_clust for num in int_contents]
@@ -126,9 +126,9 @@ def dropOrigin(df, file_path='origin_log.csv'):
 
     return df
 
-def body(rain_list, percentile_list, year):
+def body(rain_list, percentile_list, year, cmd_args):
     # process data
-    data = dfProcessing(rain_list, percentile_list, year)
+    data = dfProcessing(rain_list, percentile_list, year, cmd_args)
     df = pd.DataFrame(data=data, columns=['Location', 'Year', '<5%-ile', '<10%-ile', '<15%-ile', '%-ile', 'Total Rainfall (mm)'])
     df = dropOrigin(df)
     logInterpreter()
@@ -145,7 +145,7 @@ def main():
     rain_list = input_df['Rainfall Totals'].tolist()
     rain_list = [item.strip('][').split(', ') for item in rain_list]
     # process
-    df = body(rain_list, percentile_list, cmd_args.first_year)
+    df = body(rain_list, percentile_list, cmd_args.first_year, cmd_args)
     # get DHSID
     DHSID_col = input_df['DHSID'].repeat(len(percentile_list[0]))
     DHSID_col = DHSID_col.reset_index(drop=True)

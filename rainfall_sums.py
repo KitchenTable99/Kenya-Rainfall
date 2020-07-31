@@ -4,6 +4,7 @@
 #
 
 import os
+import pickle
 import argparse
 import itertools
 import statistics
@@ -77,11 +78,15 @@ def body(cmd_args):
     Returns:
         GeoDataFrame: a GeoPandas GeoDataFrame with all of the rainfall sums included.
     '''
+    '''
     # parse month range
     month_range = fp.cropCalendarParser(cmd_args.unit_code)
     month_range = [int(month) for month in month_range]
     # get precip data
     precip_data = importPrecipData(month_range, windows=cmd_args.windows, testing=cmd_args.testing)
+    '''
+    with open('full_precip.pickle', 'rb') as f:
+        precip_data = pickle.load(f)
     # get geodata
     st_coords = fp.precipFileParser('./resources/precip_data/precip.1977', [4, 8], return_coords=True)
     gdf = fp.shapeFileParser(cmd_args.shapefile_path, st_coords, cmd_args, testing=cmd_args.testing)
