@@ -24,7 +24,7 @@ def percentile(data_list):
 
     return stats.gamma.cdf(target_value, fit_alpha, loc=fit_loc, scale=fit_beta)
 
-def sumSlicing(sum_list, len_years, verbose=False):
+def sumSlicing(sum_list, len_years):
     '''This function generates all percentiles across a list.
     
     Args:
@@ -34,7 +34,6 @@ def sumSlicing(sum_list, len_years, verbose=False):
     Returns:
         list: a list of percentiles fitted to a gamma distribution
     '''
-    if verbose: pbar = progress(total=len(sum_list)-len_years, leave=False)     # establish a nice progress bar
     leading_pointer = 0
     okazaki_pointer = len_years + 1
     percentile_list = []
@@ -44,8 +43,6 @@ def sumSlicing(sum_list, len_years, verbose=False):
         percentile_list.append(temp)
         leading_pointer += 1
         okazaki_pointer += 1
-        if verbose: pbar.update(1)  # update progress bar
-    if verbose: pbar.close()
 
     return percentile_list
 
@@ -58,7 +55,6 @@ def commandLineParser():
     parser = argparse.ArgumentParser()
     parser.add_argument('file_path', type=str, help='the path to the csv file containing the output of sum_rainfall.py')
     parser.add_argument('len_years', type=int, help='the number of years to use to fit each gamma distribution.')
-    parser.add_argument('--verbose', '-v', action='store_true', help='whether or not to see the intermediate progress bar')
     parser.add_argument('--testing', '-t', action='store_true', help='whether or not to see the intermediate progress bar')
     args = parser.parse_args()
 
@@ -66,13 +62,7 @@ def commandLineParser():
 
 def body(sum_list, cmd_args):
     # calculate percentiles
-    rainfall_percentiles = [sumSlicing(rainfall_sum, cmd_args.len_years, cmd_args.verbose) for rainfall_sum in progress(sum_list, desc='Calculating Percentiles')]
-    if cmd_args.verbose or __name__ == '__main__':
-        # print out year range
-        _, columns = os.popen('stty size', 'r').read().split()
-        fancy_sep = ['-' for _ in range(int(columns))]
-        print(''.join(fancy_sep))                                   # allow for some eyeball breathing room
-        print(f'This program calculated {len(rainfall_percentiles[0])} years worth of percentiles.\nThe list stored in "Rainfall Percentiles" represents data beginning in the year {1950+cmd_args.len_years}.\nThis is assuming that the first precip file contains data from the year 1950.')
+    rainfall_percentiles = [sumSlicing(rainfall_sum, cmd_args.len_years) for rainfall_sum in progress(sum_list, desc='Calculating Percentiles')]
 
     return rainfall_percentiles
 
@@ -90,6 +80,11 @@ def main():
         df = df.truncate(before=0, after=2)
     else:
         percentiles = body(rainfall_sums, cmd_args)
+     # print out year range
+    _, columns = os.popen('stty size', 'r').read().split()
+    fancy_sep = ['-' for _ in range(int(columns))]
+    print(''.join(fancy_sep))                                   # allow for some eyeball breathing room
+    print(f'This program calculated {len(percentiles[0])} years worth of percentiles.\nThe list stored in "Rainfall Percentiles" represents data beginning in the year {1950+cmd_args.len_years}.\nThis is assuming that the first precip file contains data from the year 1950.')
     df['Rainfall Percentiles'] = percentiles
     # write out
     write_path = 'gammaProcessed_' + cmd_args.file_path

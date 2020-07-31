@@ -24,26 +24,30 @@ def commandLineParser():
     parser.add_argument('shapefile_path', type=str, help='the path to the .shp file in a shapefile folder. This folder should be expanded from a .zip file.')
     parser.add_argument('num_stations', type=int, help='the minimum distance to the (nth) station will be returned. ')
     parser.add_argument('--testing', action='store_true', help='enter testing mode. All functions will be passed testing=True where possible.')
-    parser.add_argument('--determine_distance', default=True, help='needed for file_parsers. DO NOT TOUCH.')
     args = parser.parse_args()
 
     return args
+
+def body(dist_list, cmd_args):
+    # drop the ones at the origin
+    clust_nums = cp.interpretOriginLog('origin_log.csv')
+    clust_indices = [clust_num - 1 for clust_num in clust_nums]
+    distances_list = [raw_dist for index, raw_dist in enumerate(dist_list) if index not in clust_indices]
+    # sort each location
+    for lst in distances_list: lst.sort()
+    # create a list of the distance to have cmd_args.num_stations captured
+    minimum_distances = [lst[cmd_args.num_stations - 1] for lst in distances_list]
+
+    return minimum_distances
 
 def main():
     # get command-line args
     cmd_args = commandLineParser()
     # bring in station distances
     st_coords = fp.precipFileParser('./resources/precip_data/precip.1977', [4, 8], return_coords=True)
-    raw_distances_list = fp.shapeFileParser(cmd_args.shapefile_path, st_coords, cmd_args, testing=cmd_args.testing)
-    # drop the ones at the origin
-    clust_nums = cp.interpretOriginLog('origin_log.csv')
+    raw_distances_list, _ = fp.distances(cmd_args.shapefile_path, st_coords, cmd_args, testing=cmd_args.testing)
+    minimum_distances = body(raw_distances_list, cmd_args)
     os.system('rm origin_log.csv')
-    clust_indices = [clust_num - 1 for clust_num in clust_nums]
-    distances_list = [raw_dist for index, raw_dist in enumerate(raw_distances_list) if index not in clust_indices]
-    # sort each location
-    for lst in distances_list: lst.sort()
-    # create a list of the distance to have cmd_args.num_stations captured
-    minimum_distances = [lst[cmd_args.num_stations - 1] for lst in distances_list]
     # output dataframe
     df = pd.DataFrame(minimum_distances, columns=['Distances'])
     df.to_csv('distances.csv', index=False)

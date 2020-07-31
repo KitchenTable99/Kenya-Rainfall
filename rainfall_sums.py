@@ -11,7 +11,7 @@ import file_parsers as fp
 from termcolor import cprint
 from tqdm import tqdm as progress
 
-def importPrecipData(month_range, windows='', precip_data_folder='./resources/precip_data', testing=False):
+def importPrecipData(month_range, cmd_args, precip_data_folder='./resources/precip_data', testing=False):
     '''This function imports all precip data in ./resources/precip_data or another specified folder
     
     Args:
@@ -24,15 +24,14 @@ def importPrecipData(month_range, windows='', precip_data_folder='./resources/pr
         list: a list of parsed precip data. Of the form [[[x1, y1], SUM2], [[x2, y2], SUM2], ...] where SUM is the sum of the rainfall in the selected months
     '''
     # get list of precip files
-    if windows:
-        precip_contents = fp.precipListParser(windows, testing=testing)
-    else:
-        os.system(f'cd {precip_data_folder}; ls precip* > ../../precip.txt')
-        precip_contents = fp.precipListParser('precip.txt', testing=testing)
-        os.system('rm precip.txt')
-    # modify the path variable
-    precip_contents = ['./resources/precip_data/' + file for file in precip_contents]
+    precip_contents = []
+    for root, dirs, files in os.walk(precip_data_folder):
+        for file in files:
+            if file.startswith('precip.'):
+                precip_contents.append(os.path.join(root, file))
     # create precip data list for them all
+    if cmd_args.testing:
+        precip_contents = precip_contents[:10]
     precip_data = [fp.precipFileParser(path, month_range) for path in progress(precip_contents, desc='Importing precip data')]
 
     return precip_data
@@ -45,12 +44,10 @@ def commandLineParser():
     '''
     parser = argparse.ArgumentParser()
     parser.add_argument('--unit_code', required=True, type=int, help='the unit code that designates the area of interest. See ./resources/unit_name.txt for list of unit codes.')
-    parser.add_argument('--distance', required=True, type=float, default=10., help='the maximum distance (in km) allowed between a DHS center and a precip grid center. Defaults to 10.0 km.')
     parser.add_argument('--shapefile_path', required=True, type=str, help='the path to the .shp file in a shapefile folder. This folder should be expanded from a .zip file.')
+    parser.add_argument('--distance', type=float, default=False, help='the maximum distance (in km) allowed between a DHS center and a precip grid center.')
     parser.add_argument('--csv_name', type=str, default='data.csv', help='the name of the csv to which this program will write. Defaults to data.csv')
     parser.add_argument('--testing', action='store_true', help='enter testing mode. All functions will be passed testing=True where possible.')
-    parser.add_argument('--windows', '-w', type=str, help='the file path for the list of the names of precip files.')
-    parser.add_argument('--determine_distance', default=False, help='needed for file_parsers. DO NOT TOUCH.')
     args = parser.parse_args()
 
     return args
@@ -81,12 +78,13 @@ def body(cmd_args):
     month_range = fp.cropCalendarParser(cmd_args.unit_code)
     month_range = [int(month) for month in month_range]
     # get precip data
-    precip_data = importPrecipData(month_range, windows=cmd_args.windows, testing=cmd_args.testing)
+    precip_data = importPrecipData(month_range, cmd_args, testing=cmd_args.testing)
     # get geodata
     st_coords = fp.precipFileParser('./resources/precip_data/precip.1977', [4, 8], return_coords=True)
     gdf = fp.shapeFileParser(cmd_args.shapefile_path, st_coords, cmd_args, testing=cmd_args.testing)
     # generate rainfall totals
     station_indices = gdf['Station Indices'].tolist()
+    print(station_indices[0])
     rainfall_totals = [generateRainFallSums(index_list, data) for index_list, data in progress(zip(station_indices, itertools.repeat(precip_data)), total=len(gdf['Station Indices']), desc='Calculating rainfall sums')]
     gdf['Rainfall Totals'] = rainfall_totals
     # print out needed calculation stats
@@ -105,6 +103,7 @@ def body(cmd_args):
 def main():
     # get command line arguments
     cmd_args = commandLineParser()
+    cmd_args.num_stations = 3
     # call functionality
     gdf = body(cmd_args)
     # store in csv

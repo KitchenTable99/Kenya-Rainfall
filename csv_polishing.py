@@ -9,7 +9,7 @@ import itertools
 import numpy as np
 import pandas as pd
 
-def locationProcessing(percentile_list, rainfall_list):
+def locationProcessing(percentile_list, rainfall_list, cmd_args):
     '''This function turns the rainfall totals and precipitation percentiles into the desired form.
     
     Args:
@@ -24,17 +24,17 @@ def locationProcessing(percentile_list, rainfall_list):
         values = []
         values.append(percentile_list.index(pyear))
         pyear = float(pyear)
-        ryear = rainfall_list[rainfall_list.index(ryear) + 30]
+        ryear = rainfall_list[rainfall_list.index(ryear) + cmd_args.len_years]
         values.append(pyear < .05)      # 5%-ile
         values.append(pyear < .10)      # 10%-ile
         values.append(pyear < .15)      # 15%-ile
         values.append(round(pyear,4))   # actual %-ile
-        values.append(round(float(ryear), 4))  # rainfall (mm)          CHANGE THIS
+        values.append(round(float(ryear), 4))  # rainfall (mm)
         total_values.append(values)
     return total_values
 
-def dfProcessing(rain_list, percentile_list, first_year):
-    data_list = [locationProcessing(per, rain) for per, rain in zip(percentile_list, rain_list)]
+def dfProcessing(rain_list, percentile_list, first_year, cmd_args):
+    data_list = [locationProcessing(per, rain, cmd_args) for per, rain in zip(percentile_list, rain_list)]
     # change unhelpful index numbers into helpful DHSCLUST -- year
     for location in data_list:
         for year in location:
@@ -55,6 +55,7 @@ def commandLineParser():
     '''
     parser = argparse.ArgumentParser()
     parser.add_argument('file_path', type=str, help='the path to the csv file containing the output of gamma_calculations.py')
+    parser.add_argument('len_years', type=int, help='the number of years to use to fit each gamma distribution.')
     parser.add_argument('--first_year', type=int, default=1980, help='the year corresponding to the first value of the precipitation percentile. Output by gamma_calculations.py. Defaults to 1980')
     parser.add_argument('--output_file', '-n', type=str, default='cleanGamma_data.csv', help='the name of the processed csv. Defaults to cleanGamma_data.csv')
     args = parser.parse_args()
@@ -126,9 +127,10 @@ def dropOrigin(df, file_path='origin_log.csv'):
 
     return df
 
-def body(rain_list, percentile_list, year):
+def body(rain_list, percentile_list, year, cmd_args):
     # process data
-    data = dfProcessing(rain_list, percentile_list, year)
+    data = dfProcessing(rain_list, percentile_list, year, cmd_args)
+    # make new dataframe
     df = pd.DataFrame(data=data, columns=['Location', 'Year', '<5%-ile', '<10%-ile', '<15%-ile', '%-ile', 'Total Rainfall (mm)'])
     df = dropOrigin(df)
     logInterpreter()
@@ -145,7 +147,7 @@ def main():
     rain_list = input_df['Rainfall Totals'].tolist()
     rain_list = [item.strip('][').split(', ') for item in rain_list]
     # process
-    df = body(rain_list, percentile_list, cmd_args.first_year)
+    df = body(rain_list, percentile_list, cmd_args.first_year, cmd_args)
     # get DHSID
     DHSID_col = input_df['DHSID'].repeat(len(percentile_list[0]))
     DHSID_col = DHSID_col.reset_index(drop=True)
