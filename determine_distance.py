@@ -24,8 +24,10 @@ def commandLineParser():
     parser = argparse.ArgumentParser()
     parser.add_argument('shapefile_path', type=str, help='the path to the .shp file in a shapefile folder. This folder should be expanded from a .zip file.')
     parser.add_argument('num_stations', type=int, help='the minimum distance to the (nth) station will be returned. ')
+    parser.add_argument('--graph', action='store_true', help='whether or not to graph the distance data')
+    parser.add_argument('--distance_csv', action='store_true', help='whether or not to dump the distance data to a csv')
+    parser.add_argument('--no_pickle', action='store_false', help='whether or not to pickle the distance list')
     parser.add_argument('--testing', action='store_true', help='enter testing mode. All functions will be passed testing=True where possible.')
-    parser.add_argument('--pickle', action='store_true', help='whether or not too pickle the distance list')
     args = parser.parse_args()
 
     return args
@@ -37,7 +39,9 @@ def main():
     # bring in station distances
     st_coords = fp.precipFileParser('./resources/precip_data/precip.1977', [4, 8], return_coords=True)
     raw_distances_list = fp.shapeFileParser(cmd_args.shapefile_path, st_coords, cmd_args, testing=cmd_args.testing)
-    if cmd_args.pickle:
+    if cmd_args.no_pickle:
+        pass
+    else:
         with open('distance_list.pickle', 'wb') as f:
             pickle.dump(raw_distances_list, f)
     # drop the ones at the origin
@@ -49,22 +53,24 @@ def main():
     for lst in distances_list: lst.sort()
     # create a list of the distance to have cmd_args.num_stations captured
     minimum_distances = [lst[cmd_args.num_stations - 1] for lst in distances_list]
-    # output dataframe
-    df = pd.DataFrame(minimum_distances, columns=['Distances'])
-    df.to_csv('distances.csv', index=False)
+    if cmd_args.distance_csv:
+        # output dataframe
+        df = pd.DataFrame(minimum_distances, columns=['Distances'])
+        df.to_csv('distances.csv', index=False)
     # terminal output
     quartiles = [round(i, 2) for i in statistics.quantiles(minimum_distances)]
     print(f'Q1: {quartiles[0]}\nMedian: {quartiles[1]}\nQ3: {quartiles[2]}')
     print(f'Mean: {round(statistics.mean(minimum_distances), 2)}')
     print(f'Max: {round(max(minimum_distances), 2)}')
-    # histogram output
-    bin_num = int(1 + 3.322*math.log10(len(minimum_distances)))
-    plt.hist(minimum_distances, weights=np.ones(len(minimum_distances)) / len(minimum_distances), bins=bin_num)
-    plt.xlabel('Distance Value')
-    plt.title('Determine Distance')
-    plt.ylabel('Percentage of total DHS Clusters')
-    plt.gca().yaxis.set_major_formatter(PercentFormatter(1))
-    plt.show()
+    if cmd_args.graph:
+        # histogram output
+        bin_num = int(1 + 3.322*math.log10(len(minimum_distances)))
+        plt.hist(minimum_distances, weights=np.ones(len(minimum_distances)) / len(minimum_distances), bins=bin_num)
+        plt.xlabel('Distance Value')
+        plt.title('Determine Distance')
+        plt.ylabel('Percentage of total DHS Clusters')
+        plt.gca().yaxis.set_major_formatter(PercentFormatter(1))
+        plt.show()
 
 if __name__ == '__main__':
     main()
