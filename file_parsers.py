@@ -44,26 +44,7 @@ def pointDist(point1, pointlist, index):
     distances = [haversine((latitude, longitude), point2) for point2 in pointlist]       # uses methods built into shapely.geometry
     return distances
 
-def precipListParser(file_path, testing=False):
-    '''This function parses the list of precip names
-    
-    Args:
-        file_path (str): a string representing the path to the file containing the names of the precip files. Defaults to the empty string.
-        testing (bool, optional): whether or not to only keep the first ten precip files.
-    
-    Returns:
-        list: a list of the names of the precip files.
-    '''
-    with open(file_path, 'r') as f:
-        precip_contents = f.read()
-    precip_contents = precip_contents.split('\n')
-    precip_contents.pop()
-    if testing:
-        precip_contents = precip_contents[:10]      # only take the first ten items if testing is passed as True
-
-    return precip_contents
-
-def shapeFileParser(file_path, station_coords, cmd_args, testing=False):
+def shapeFileParser(cmd_args, station_coords, testing=False):
     '''This function onboards the shapefile data to create the necessary railfall data
     
     Args:
@@ -76,7 +57,7 @@ def shapeFileParser(file_path, station_coords, cmd_args, testing=False):
         Geopandas.GeoDataFrame: a GeoDataFrame with all of the shapefile data plus a column ('Station Indices') containing a list of relevant indicies of the precip file data over which to search
     '''
     # import shapefile
-    gdf = gpd.read_file(file_path)
+    gdf = gpd.read_file(cmd_args.shapefile_path)
     # only take the first ten rows if testing (for speed)
     if testing:
         gdf = gdf.iloc[:100]
@@ -84,7 +65,7 @@ def shapeFileParser(file_path, station_coords, cmd_args, testing=False):
     latlong_coord_tuples = [(coord_list[1], coord_list[0]) for coord_list in station_coords]
     # find the distance between center coord and every station (print out progress bar)
     try:
-        with open(cmd_args.pickle_path, 'rb') as f:
+        with open(cmd_args.pickle, 'rb') as f:
             alldist = pickle.load(f)
     except Exception:
         alldist = [pointDist(geom, lst, index) for index, (geom, lst) in progress(enumerate(zip(gdf['geometry'], itertools.repeat(latlong_coord_tuples))), total=len(gdf['geometry']), desc='Importing shapefile')]
