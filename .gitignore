@@ -9,3 +9,4 @@ distances.csv
 origin_log.txt
 resources/ken_dhs14_raw.csv
 test.csv
+*.pickle
