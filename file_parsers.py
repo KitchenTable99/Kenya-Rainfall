@@ -12,19 +12,6 @@ import geopandas as gpd
 from haversine import haversine
 from tqdm import tqdm as progress
 from shapely.geometry import Point
-
-def timeIt(f):
-    '''This decorator times a function.
-    '''
-    def wrapper(*args, **kwargs):
-        start = time.time()
-        print('timeIt decorator called')
-        output = f(*args, **kwargs)
-        end = time.time()
-        print(f'{f.__name__} took {end - start} seconds to run.')        # time it
-        return output
-
-    return wrapper
     
 def pointDist(point1, pointlist):
     '''This function calculates the distance between one point and a list of others
@@ -59,6 +46,46 @@ def getShapeFile(cmd_args):
 
     return gdf
 
+# will be decrimented
+def precipListParser(file_path, testing=False):
+    '''This function parses the list of precip names
+    
+    Args:
+        file_path (str): a string representing the path to the file containing the names of the precip files. Defaults to the empty string.
+        testing (bool, optional): whether or not to only keep the first ten precip files.
+    
+    Returns:
+        list: a list of the names of the precip files.
+    '''
+    with open(file_path, 'r') as f:
+        precip_contents = f.read()
+    precip_contents = precip_contents.split('\n')
+    precip_contents.pop()
+    if testing:
+        precip_contents = precip_contents[:10]      # only take the first ten items if testing is passed as True
+
+    return precip_contents
+
+def coordTuples(lst):
+    '''Tuns a list of shapely.Geometry.Point objects into a list of lat_long tuples
+    
+    Args:
+        lst (list): a list of shapely.Geometry.Point objects
+    
+    Returns:
+        list: a list of lat_long tuples
+    '''
+    return [(coord_list[1], coord_list[0]) for coord_list in lst]
+
+def getDistList(cmd_args, gdf, coords):
+    if cmd_args.pickle:
+        with open(cmd_args.pickle, 'rb') as f:
+            alldist = pickle.load(f)
+    else:
+        alldist = [pointDist(geom, lst) for geom, lst in progress(zip(gdf['geometry'], itertools.repeat(coords)), total=len(gdf['geometry']), desc='Importing shapefile')]
+
+    return alldist
+
 def shapeFileParser(cmd_args, station_coords):
     '''This function onboards the shapefile data to create the necessary railfall data
     
@@ -73,14 +100,10 @@ def shapeFileParser(cmd_args, station_coords):
     '''
     # import shapefile
     gdf = getShapeFile(cmd_args)
-    # create a list of shapely.geometry.Point objects for distance comparison
-    latlong_coord_tuples = [(coord_list[1], coord_list[0]) for coord_list in station_coords]
+    # create a list of latlong coord tuples for distance comparison
+    latlong_coord_tuples = coordTuples(station_coords)
     # find the distance between center coord and every station (print out progress bar)
-    if cmd_args.pickle:
-        with open(cmd_args.pickle, 'rb') as f:
-            alldist = pickle.load(f)
-    else:
-        alldist = [pointDist(geom, lst, index) for index, (geom, lst) in progress(enumerate(zip(gdf['geometry'], itertools.repeat(latlong_coord_tuples))), total=len(gdf['geometry']), desc='Importing shapefile')]
+    alldist = getDistList(cmd_args, gdf, latlong_coord_tuples)
     if cmd_args.determine_distance: return alldist
     # create a new column and assign it the relevant station indices
     monitor_stations = [[index for index, dist in enumerate(row) if dist <= cmd_args.distance] for row in alldist]
@@ -206,7 +229,12 @@ def dropEmptyString(lst):
 
 def test():
     st_coords = precipFileParser('./resources/precip_data/precip.1977', [4, 8], return_coords=True)
-    gdf = shapeFileParser('./resources/kenya_dhs_2013/KEGE43FL.shp', st_coords)
+    with open('coords.pickle', 'wb') as fp:
+        pickle.dump(st_coords, fp)
+    processed_coords = coordTuples(st_coords)
+    with open('processed.pickle', 'wb') as fp:
+        pickle.dump(processed_coords, fp)
+    # gdf = shapeFileParser('./resources/kenya_dhs_2013/KEGE43FL.shp', st_coords)
 
 if __name__ == '__main__':
     test()

@@ -78,7 +78,6 @@ def body(cmd_args):
     Returns:
         GeoDataFrame: a GeoPandas GeoDataFrame with all of the rainfall sums included.
     '''
-    '''
     # parse month range
     month_range = fp.cropCalendarParser(cmd_args.unit_code)
     month_range = [int(month) for month in month_range]
@@ -87,9 +86,10 @@ def body(cmd_args):
     '''
     with open('full_precip.pickle', 'rb') as f:
         precip_data = pickle.load(f)
+    '''
     # get geodata
     st_coords = fp.precipFileParser('./resources/precip_data/precip.1977', [4, 8], return_coords=True)
-    gdf = fp.shapeFileParser(cmd_args.shapefile_path, st_coords, cmd_args, testing=cmd_args.testing)
+    gdf = fp.shapeFileParser(cmd_args, st_coords)
     # generate rainfall totals
     station_indices = gdf['Station Indices'].tolist()
     rainfall_totals = [generateRainFallSums(index_list, data) for index_list, data in progress(zip(station_indices, itertools.repeat(precip_data)), total=len(gdf['Station Indices']), desc='Calculating rainfall sums')]
@@ -110,6 +110,7 @@ def body(cmd_args):
 def main():
     # get command line arguments
     cmd_args = commandLineParser()
+    cmd_args.pickle = False
     # call functionality
     gdf = body(cmd_args)
     # store in csv
