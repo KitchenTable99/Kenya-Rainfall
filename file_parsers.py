@@ -6,14 +6,25 @@
 import os
 import re
 import time
-import pickle
 import itertools
 import geopandas as gpd
 from haversine import haversine
 from tqdm import tqdm as progress
-from shapely.geometry import Point
+
+def timeIt(f):
+    '''This decorator times a function.
+    '''
+    def wrapper(*args, **kwargs):
+        start = time.time()
+        print('timeIt decorator called')
+        output = f(*args, **kwargs)
+        end = time.time()
+        print(f'{f.__name__} took {end - start} seconds to run.')        # time it
+        return output
+
+    return wrapper
     
-def pointDist(point1, pointlist):
+def pointDist(point1, pointlist, index):
     '''This function calculates the distance between one point and a list of others
     
     Args:
@@ -25,28 +36,13 @@ def pointDist(point1, pointlist):
     '''
     latitude = point1.y
     longitude = point1.x
+    # filter out the origin points
+    if latitude == 0 and longitude == 0:
+        with open('origin_log.csv', 'a') as f:
+            f.write(str(index)+'\n')
     distances = [haversine((latitude, longitude), point2) for point2 in pointlist]       # uses methods built into shapely.geometry
     return distances
 
-def getShapeFile(cmd_args):
-    '''Imports the shapefile. Will drop any point at the origin and only keeps the first ten if testing is True.
-    
-    Args:
-        cmd_args (argparse.namespace): command-line arguments
-    
-    Returns:
-        GeoPandas GeoDataFrame: the DataFrame of the shapefile
-    '''
-    # import shapefile
-    gdf = gpd.read_file(cmd_args.shapefile_path)
-    # only take the first ten rows if testing (for speed)
-    if cmd_args.testing:
-        gdf = gdf.iloc[:10]
-    gdf = gdf[gdf.geometry != Point(0, 0)]        # drop the points at the origin
-
-    return gdf
-
-# will be decrimented
 def precipListParser(file_path, testing=False):
     '''This function parses the list of precip names
     
@@ -66,27 +62,7 @@ def precipListParser(file_path, testing=False):
 
     return precip_contents
 
-def coordTuples(lst):
-    '''Tuns a list of shapely.Geometry.Point objects into a list of lat_long tuples
-    
-    Args:
-        lst (list): a list of shapely.Geometry.Point objects
-    
-    Returns:
-        list: a list of lat_long tuples
-    '''
-    return [(coord_list[1], coord_list[0]) for coord_list in lst]
-
-def getDistList(cmd_args, gdf, coords):
-    if cmd_args.pickle:
-        with open(cmd_args.pickle, 'rb') as f:
-            alldist = pickle.load(f)
-    else:
-        alldist = [pointDist(geom, lst) for geom, lst in progress(zip(gdf['geometry'], itertools.repeat(coords)), total=len(gdf['geometry']), desc='Importing shapefile')]
-
-    return alldist
-
-def shapeFileParser(cmd_args, station_coords):
+def shapeFileParser(file_path, station_coords, cmd_args, testing=False):
     '''This function onboards the shapefile data to create the necessary railfall data
     
     Args:
@@ -99,11 +75,14 @@ def shapeFileParser(cmd_args, station_coords):
         Geopandas.GeoDataFrame: a GeoDataFrame with all of the shapefile data plus a column ('Station Indices') containing a list of relevant indicies of the precip file data over which to search
     '''
     # import shapefile
-    gdf = getShapeFile(cmd_args)
-    # create a list of latlong coord tuples for distance comparison
-    latlong_coord_tuples = coordTuples(station_coords)
+    gdf = gpd.read_file(file_path)
+    # only take the first ten rows if testing (for speed)
+    if testing:
+        gdf = gdf.iloc[:100]
+    # create a list of shapely.geometry.Point objects for distance comparison
+    latlong_coord_tuples = [(coord_list[1], coord_list[0]) for coord_list in station_coords]
     # find the distance between center coord and every station (print out progress bar)
-    alldist = getDistList(cmd_args, gdf, latlong_coord_tuples)
+    alldist = [pointDist(geom, lst, index) for index, (geom, lst) in progress(enumerate(zip(gdf['geometry'], itertools.repeat(latlong_coord_tuples))), total=len(gdf['geometry']), desc='Importing shapefile')]
     if cmd_args.determine_distance: return alldist
     # create a new column and assign it the relevant station indices
     monitor_stations = [[index for index, dist in enumerate(row) if dist <= cmd_args.distance] for row in alldist]
@@ -125,6 +104,13 @@ def precipFileParser(file_path, months, sum_rainfall=True, return_coords=False):
               if sum_rainfall is passed as True, the return value will be a one-dimentional list of the total rainfall (in mm) that fell during the span of the months passed.
               If sum_rainfall is passed as False, the return value will be a two-dimentional list of the monthly rainfall values (in mm) for each station during the desired month ran
     '''
+    # input validation
+    if not isinstance(file_path, str): raise TypeError(f'file_path must be a string. You passed a {type(file_path)}.')
+    if not isinstance(months, list): raise TypeError(f'months must be a list. You passed a {type(months)}.')
+    if len(months) != 2: raise ValueError(f'months must be a list of length two. You passed a list of length {len(months)}.')
+    if not isinstance(sum_rainfall, bool): raise TypeError(f'sum_rainfall must be a boolean. You passed a {type(sum_rainfall)}.')
+    if not isinstance(return_coords, bool): raise TypeError(f'return_coords must be a boolean. You passed a {type(return_coords)}.')
+
     # bring in file
     with open(file_path, 'r') as fp:
         raw_file_contents = fp.read()
@@ -173,6 +159,10 @@ def cropCalendarParser(unit_name_start, crop_cal_name='./resources/cropping_cale
     Returns:
         tuple: the beginning and end of the growing season as strings. e.g. ('4', '8')
     '''
+    # input validation
+    if not isinstance(unit_name_start, int): raise TypeError(f'unit_name_start must be a integer. You passed a {type(unit_name_start)}.')
+    if not isinstance(crop_cal_name, str): raise TypeError(f'crop_cal_name must be a string. You passed a {type(crop_cal_name)}.')
+
     # bring in calendar
     with open(crop_cal_name, 'r') as fp:
         calendar_contents = fp.read()
@@ -229,12 +219,7 @@ def dropEmptyString(lst):
 
 def test():
     st_coords = precipFileParser('./resources/precip_data/precip.1977', [4, 8], return_coords=True)
-    with open('coords.pickle', 'wb') as fp:
-        pickle.dump(st_coords, fp)
-    processed_coords = coordTuples(st_coords)
-    with open('processed.pickle', 'wb') as fp:
-        pickle.dump(processed_coords, fp)
-    # gdf = shapeFileParser('./resources/kenya_dhs_2013/KEGE43FL.shp', st_coords)
+    gdf = shapeFileParser('./resources/kenya_dhs_2013/KEGE43FL.shp', st_coords)
 
 if __name__ == '__main__':
     test()

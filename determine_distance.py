@@ -5,7 +5,6 @@
 
 import os
 import math
-import pickle
 import argparse
 import statistics
 import numpy as np
@@ -25,7 +24,7 @@ def commandLineParser():
     parser.add_argument('shapefile_path', type=str, help='the path to the .shp file in a shapefile folder. This folder should be expanded from a .zip file.')
     parser.add_argument('num_stations', type=int, help='the minimum distance to the (nth) station will be returned. ')
     parser.add_argument('--testing', action='store_true', help='enter testing mode. All functions will be passed testing=True where possible.')
-    parser.add_argument('--pickle', action='store_true', help='whether or not too pickle the distance list')
+    parser.add_argument('--determine_distance', default=True, help='needed for file_parsers. DO NOT TOUCH.')
     args = parser.parse_args()
 
     return args
@@ -33,13 +32,9 @@ def commandLineParser():
 def main():
     # get command-line args
     cmd_args = commandLineParser()
-    cmd_args.determine_distance = True
     # bring in station distances
     st_coords = fp.precipFileParser('./resources/precip_data/precip.1977', [4, 8], return_coords=True)
     raw_distances_list = fp.shapeFileParser(cmd_args.shapefile_path, st_coords, cmd_args, testing=cmd_args.testing)
-    if cmd_args.pickle:
-        with open('distance_list.pickle', 'wb') as f:
-            pickle.dump(raw_distances_list, f)
     # drop the ones at the origin
     clust_nums = cp.interpretOriginLog('origin_log.csv')
     os.system('rm origin_log.csv')
