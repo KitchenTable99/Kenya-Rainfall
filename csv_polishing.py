@@ -39,7 +39,7 @@ def dfProcessing(rain_list, percentile_list, first_year):
     for location in data_list:
         for year in location:
             tempyr = year[0] + first_year
-            year[0] = str(float(data_list.index(location)) + 1)
+            year[0] = str(int(data_list.index(location)) + 1)
             year.insert(1, str(tempyr))
     # create numpy array
     shape = (len(data_list[0])*len(data_list))
@@ -146,13 +146,11 @@ def main():
     rain_list = [item.strip('][').split(', ') for item in rain_list]
     # process
     df = body(rain_list, percentile_list, cmd_args.first_year)
-    # prepend the dhscc and the dhsyear to the dataframe
-    num_rows = len(df.index)
-    dhscc = input_df['DHSCC'][0]
-    dhsyear = int(input_df['DHSYEAR'][0])
-    temp_data = np.array(list(itertools.repeat([dhscc, dhsyear], num_rows)))
-    prepend_data = pd.DataFrame(data=temp_data, columns=['DHSCC', 'DHSYEAR'])
-    df = pd.concat([prepend_data, df], axis=1)
+    # get DHSID
+    DHSID_col = input_df['DHSID'].repeat(len(percentile_list[0]))
+    DHSID_col = DHSID_col.reset_index(drop=True)
+    df.insert(0, 'DHSID', DHSID_col, allow_duplicates=True)
+    df.drop('Location', axis=1, inplace=True)
     # export to csv
     df.to_csv(cmd_args.output_file, index=False)
 
